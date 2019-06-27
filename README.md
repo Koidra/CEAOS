@@ -1,5 +1,5 @@
 # CEA Open Simulator (CEAOS)
-CEAOS is a dynamic simulator for greenhouses and vertical farms. A simulator is necessary for accelerate the research in CEA (Controlled Environment Agriculture).
+CEAOS is a dynamic simulator for greenhouses and vertical farms. With this simulator, we hope to accelerate the CEA (Controlled Environment Agriculture) research.
 
 ## Interface
 The way to interact with the simulator at the code level is by
