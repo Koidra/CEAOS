@@ -30,7 +30,7 @@ observations = sim.step(setpoints)
 The result of `step` is the observations, e.g. sensor values, at the next time step.
 
 ## Modular Software Architecture
-![CEAOS Architecture](https://i.imgur.com/I3B90nu.png)
+![CEAOS Architecture](https://i.imgur.com/v1IcJXg.png)
 
 When the `step` method of simulator is called, it references to both `climate model` and `crop model` to estimate coefficients and solve differential equations to get the observations at the current time step. Climate model and crop model share each other information to complete the task. 
 
