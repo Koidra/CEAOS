@@ -1,23 +1,30 @@
-from abc import ABC, abstractmethod
 import numpy as np
 from gym import Env
-import climate_simulator, crop_simulator
+from climate_model import *
+from crop_model import *
 
 
 class CEASim(Env):
-    def __init__(structure, crop):
-        self.climatesim = NotImplemented
-        self.cropsim = NotImplemented
-        self._state = NotImplemented
+
+    def __init__(self, climate_model: IndoorClimateModel, crop_model: CropModel):
+        self.climate_model = climate_model
+        self.crop_model = crop_model
+        self._crop_obs = NotImplemented
 
     def step_(self, climate_setpoint: np.ndarray, crop_setpoint: np.ndarray) -> np.ndarray:
-        climate_obs = self.climatesim.step(climate_setpoint, self._state)
-        crop_obs = self.climatesim.step(...)
-        self._state = #update state
+        climate_obs = self.climate_model.step(climate_setpoint, self._state)
+        crop_obs = self.crop_model.step(climate_obs, crop_setpoint)
 
-        raise NotImplementedError()
-
+        self._crop_obs = crop_obs
+        raise NotImplementedError
 
     # Implement gym's interface
     def step(self, setpoint: np.ndarray):
-        return self.step_(setpoint split)
+        # TODO: Call self._step
+        raise NotImplementedError
+
+    def reset(self):
+        raise NotImplementedError
+
+    def render(self, mode='human'):
+        pass
