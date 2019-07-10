@@ -1,7 +1,7 @@
 import numpy as np
 from gym import Env
-from climate_model import *
-from crop_model import *
+from climate_model import IndoorClimateModel
+from crop_model import CropModel
 
 
 class CEASim(Env):
@@ -12,7 +12,7 @@ class CEASim(Env):
         self._crop_obs = NotImplemented
 
     def step_(self, climate_setpoint: np.ndarray, crop_setpoint: np.ndarray) -> np.ndarray:
-        climate_obs = self.climate_model.step(climate_setpoint, self._state)
+        climate_obs = self.climate_model.step(climate_setpoint, self._crop_obs)
         crop_obs = self.crop_model.step(climate_obs, crop_setpoint)
 
         self._crop_obs = crop_obs
