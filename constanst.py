@@ -91,7 +91,8 @@ class LumpedCoverConstants:
     a movable indoor thermal screen (ThScr).
 
     Default value is of a Texas greenhouse.
-    Shading Screen's constants are not mentioned in the Thesis, so we set them to zero.
+    Shading Screen's constants are not mentioned in the Thesis, so we set reflection coefficient to 0
+    and the transmission coefficient to 1.
 
     Due to the complexity of parameters,
     this class hold temporarily value of Lumped cover layers.
@@ -104,7 +105,7 @@ class LumpedCoverConstants:
     class PAR:
         # Shading Screen
         r_ShScr = 0
-        t_ShScr = 0
+        t_ShScr = 1
 
         # Semi-permanent shading screen
         r_ShScrPer = 0.3
@@ -121,7 +122,7 @@ class LumpedCoverConstants:
     class NIR:
         # Shading Screen
         r_ShScr = 0
-        t_ShScr = 0
+        t_ShScr = 1
 
         # Semi-permanent shading screen
         r_ShScrPer = 0.3
@@ -138,7 +139,7 @@ class LumpedCoverConstants:
     class FIR:
         # Shading Screen
         r_ShScr = 0
-        t_ShScr = 0
+        t_ShScr = 1
 
         # Semi-permanent shading screen
         r_ShScrPer = 0
