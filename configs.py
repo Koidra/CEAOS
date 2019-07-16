@@ -79,8 +79,6 @@ class GHCommonConstants:
     """
 
 
-
-
 class LumpedCoverConstants:
     """
     This class is based on section 8.4 and table 8.2 (in section 8.13).
