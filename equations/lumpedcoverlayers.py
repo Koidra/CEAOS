@@ -20,7 +20,7 @@ def transmission_coefficient(t1, t2, r1, r2) -> float:
     :param float t2: the transmission coefficients of the second layer
     :param float r1: the reflection coefficients of the first layer
     :param float r2: the reflection coefficients of the second layer
-    :return: float
+    :return: The transmission coefficient
     """
 
     return (t1 * t2) / (1 - r1 * r2)
@@ -33,7 +33,7 @@ def reflection_coefficient(t1, r1, r2) -> float:
     :param float t1: the transmission coefficients of the first layer
     :param float r1: the reflection coefficients of the first layer
     :param float r2: the reflection coefficients of the second layer
-    :return: float
+    :return: The reflection coefficient
     """
 
     return r1 + (t1 * t1 * r2) / (1 - r1 * r2)
@@ -49,7 +49,7 @@ def transmission_coefficient_with_control(u1, u2, t1, t2, r1, r2) -> float:
     :param float t2: the transmission coefficients of the second layer
     :param float r1: the reflection coefficients of the first layer
     :param float r2: the reflection coefficients of the second layer
-    :return: float
+    :return: The transmission coefficient with control
     """
 
     t1_ = (1 - u1 * (1 - t1))
@@ -70,7 +70,7 @@ def reflection_coefficient_with_control(u1, u2, t1, t2, r1, r2) -> float:
     :param float t2: the transmission coefficients of the second layer
     :param float r1: the reflection coefficients of the first layer
     :param float r2: the reflection coefficients of the second layer
-    :return: float
+    :return: The reflection coefficient with control
     """
     t1_ = (1 - u1 * (1 - t1))
     t2_ = 1 - u2 * (1 - t2)

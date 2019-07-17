@@ -1,5 +1,8 @@
 import numpy as np
 from abc import ABC, abstractmethod
+from configs import Config as C
+from data_models import Setpoint
+from equations import capacities, heatfluxes, lumpedcoverlayers
 
 
 class IndoorClimateModel(ABC):
@@ -9,10 +12,10 @@ class IndoorClimateModel(ABC):
 
     # Greenhouse or Vertical farm design constants
     # E.g.: Lamps Par, Light Transmission Ratio, ...
-    gh_structure = None
+    greenhouse_design = None
 
-    def __init__(self, greenhouse_struct):
-        self.gh_structure = greenhouse_struct
+    def __init__(self, *args, **kwargs):
+        pass
 
     @abstractmethod
     def step(self, crop_obs: np.ndarray, setpoint: np.ndarray):
@@ -21,11 +24,14 @@ class IndoorClimateModel(ABC):
 
 class GreenhouseClimateModel(IndoorClimateModel):
 
-    def __init__(self, greenhouse_struct):
-        super(GreenhouseClimateModel, self).__init__(greenhouse_struct)
+    def __init__(self, greenhouse_config_file):
+        super(GreenhouseClimateModel, self).__init__(greenhouse_config_file)
 
     def step(self, crop_obs: np.ndarray, setpoint: np.ndarray):
         raise NotImplementedError
+
+    def __canopy_temperature_delta(self, setpoint: Setpoint):
+        capCan = capacities.canopy_heat_capacity(C.)
 
 
 class VerticalFarmClimateModel(IndoorClimateModel):
