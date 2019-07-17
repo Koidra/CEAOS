@@ -57,26 +57,26 @@ class Config(object):
         """
         αLeafAir, table 8.1
         Convective heat exchange coefficient from the canopy leaf to the greenhouse air 
-        Unit: [W*m^(-2)*K^(-1)]
+        Unit: [W m^(-2) K^(-1)]
         """
 
         d_H = 2.45E6
         """
         ∆H, table 8.1
         Latent heat of evaporation
-        Unit: J*kg^(-1) water
+        Unit: J kg^(-1) water
         """
 
         c_pAir = 1E3
         """c_pAir, table 8.1
         Specific heat capacity of the air
-        Unit: [J*K^(-1)*kg^(-1)]
+        Unit: [J K^(-1) kg^(-1)]
         """
 
         capLeaf = 1.2E3
         """capLeaf, table 8.1
         Heat capacity of a square meter canopy leaves
-        Unit: [J*K^(-1)*m^(-2)]
+        Unit: [J K^(-1) m^(-2)]
         """
 
     class Greenhouse:
