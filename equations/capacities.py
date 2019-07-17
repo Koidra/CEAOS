@@ -5,6 +5,6 @@ def canopy_heat_capacity(capLeaf: float, LAI: float) -> float:
 
     :param capLeaf: the heat capacity of a square meter of canopy
     :param LAI: the leaf area index
-    :return: [J*K^(-1)*m^(-2)]
+    :return: [J K^(-1) m^(-2)]
     """
     return capLeaf * LAI

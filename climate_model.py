@@ -18,7 +18,7 @@ class IndoorClimateModel(ABC):
         pass
 
     @abstractmethod
-    def step(self, crop_obs: np.ndarray, setpoint: np.ndarray):
+    def step(self, crop_obs: np.ndarray, setpoint: Setpoint):
         pass
 
 
