@@ -79,3 +79,12 @@ def reflection_coefficient_with_control(u1, u2, t1, t2, r1, r2) -> float:
 
     return reflection_coefficient(t1, r1, r2)
 
+
+def absorption_coefficient(t, r):
+    """The absorption coefficient
+
+    :param t: the transmission coefficient
+    :param r: the reflection coefficient
+    :return: The absorption coefficient
+    """
+    return 1 - (t + r)
