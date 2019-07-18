@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from configs import Config as C
 from data_models import Setpoint
 from equations import capacities, heatfluxes, lumpedcoverlayers
+from utils import params_except_keys
 
 
 class IndoorClimateModel(ABC):
@@ -32,11 +33,13 @@ class GreenhouseClimateModel(IndoorClimateModel):
 
     def __canopy_temperature(self, setpoint: Setpoint):
         LAI = 1  # Temporary value of Leaf Area Index
-        tCovPAR = 1  # Temporary value for tCovPAR
         iGlob = 1  # Temporary value for iGlob
 
+        # ***************************************************
         # Calculating tCovPAR, Section 8.4
-        _ShScr_ShScrPer_params = {
+        # ***************************************************
+
+        _ShScr_ShScrPer_PAR_params = {
             'u1': setpoint.U_ShadingScreen,
             'u2': setpoint.U_ShadingScreenPer,
             't1': C.Greenhouse.LumpedCoverLayers.PAR.t_ShScr,
@@ -45,7 +48,7 @@ class GreenhouseClimateModel(IndoorClimateModel):
             'r2': C.Greenhouse.LumpedCoverLayers.PAR.r_ShScrPer
         }
 
-        _Rf_ThScr_params = {
+        _Rf_ThScr_PAR_params = {
             'u1': setpoint.U_Roof,
             'u2': setpoint.U_ThermalScreen,
             't1': C.Greenhouse.LumpedCoverLayers.PAR.t_Rf,
@@ -54,19 +57,81 @@ class GreenhouseClimateModel(IndoorClimateModel):
             'r2': C.Greenhouse.LumpedCoverLayers.PAR.r_ThScr
         }
 
-        t_ShScr_ShScrPer = lumpedcoverlayers.transmission_coefficient_with_control(**_ShScr_ShScrPer_params)
-        r_ShScr_ShScrPer = lumpedcoverlayers.reflection_coefficient_with_control(**_ShScr_ShScrPer_params)
+        t_PAR_ShScr_ShScrPer = lumpedcoverlayers.transmission_coefficient(**_ShScr_ShScrPer_PAR_params)
+        r_PAR_ShScr_ShScrPer = lumpedcoverlayers.reflection_coefficient(**params_except_keys(_ShScr_ShScrPer_PAR_params, except_keys='t2'))
 
-        t_Rf_ThScr = lumpedcoverlayers.transmission_coefficient_with_control(**_Rf_ThScr_params)
-        r_Rf_ThScr = lumpedcoverlayers.reflection_coefficient_with_control(**_Rf_ThScr_params)
+        t_PAR_Rf_ThScr = lumpedcoverlayers.transmission_coefficient(**_Rf_ThScr_PAR_params)
+        r_PAR_Rf_ThScr = lumpedcoverlayers.reflection_coefficient(**params_except_keys(_Rf_ThScr_PAR_params, except_keys='t2'))
 
         # From 2 combined layers above
-        tCovPAR = lumpedcoverlayers.transmission_coefficient(t_ShScr_ShScrPer, t_Rf_ThScr, r_ShScr_ShScrPer, r_Rf_ThScr)
+        tCovPAR = lumpedcoverlayers.transmission_coefficient(t_PAR_ShScr_ShScrPer, t_PAR_Rf_ThScr, r_PAR_ShScr_ShScrPer, r_PAR_Rf_ThScr)
 
+        # ***************************************************
+        # Calculate r_Cov_NIR, Using in equation 8.30
+        # ***************************************************
+
+        _ShScr_ShScrPer_NIR_params = {
+            'u1': setpoint.U_ShadingScreen,
+            'u2': setpoint.U_ShadingScreenPer,
+            't1': C.Greenhouse.LumpedCoverLayers.NIR.t_ShScr,
+            't2': C.Greenhouse.LumpedCoverLayers.NIR.t_ShScrPer,
+            'r1': C.Greenhouse.LumpedCoverLayers.NIR.r_ShScr,
+            'r2': C.Greenhouse.LumpedCoverLayers.NIR.r_ShScrPer
+        }
+
+        _Rf_ThScr_NIR_params = {
+            'u1': setpoint.U_Roof,
+            'u2': setpoint.U_ThermalScreen,
+            't1': C.Greenhouse.LumpedCoverLayers.NIR.t_Rf,
+            't2': C.Greenhouse.LumpedCoverLayers.NIR.t_ThScr,
+            'r1': C.Greenhouse.LumpedCoverLayers.NIR.r_Rf,
+            'r2': C.Greenhouse.LumpedCoverLayers.NIR.r_ThScr
+        }
+
+        t_NIR_ShScr_ShScrPer = lumpedcoverlayers.transmission_coefficient(**_ShScr_ShScrPer_NIR_params)
+        r_NIR_ShScr_ShScrPer = lumpedcoverlayers.reflection_coefficient(**params_except_keys(_ShScr_ShScrPer_NIR_params, except_keys='t2'))
+        r_NIR_Rf_ThScr = lumpedcoverlayers.reflection_coefficient(**params_except_keys(_Rf_ThScr_NIR_params, except_keys='t2'))
+
+        # From 2 combined layers above
+        rCovNIR = lumpedcoverlayers.reflection_coefficient(t_NIR_ShScr_ShScrPer, r_NIR_ShScr_ShScrPer, r_NIR_Rf_ThScr)
+        tCovNIR_virtual = 1 - rCovNIR  # Equation 8.30
+
+        # ***************************************************
+        # Calculate NIR absorption coefficient of the canopy, Using in equation 8.33
+        # ***************************************************
+
+        tCanNIR_virtual = np.exp(-C.Global.K_NIR*LAI)  # Equation 8.31
+        rCanNIR_virtual = C.Global.r_CanNIR*(1-tCanNIR_virtual)  # Equation 8.32
+
+        tMultiLayerCanNIR = lumpedcoverlayers.transmission_coefficient(tCovNIR_virtual, tCanNIR_virtual, rCovNIR, rCanNIR_virtual, u2=setpoint.U_Canopy)
+        rMultiLayerCanNIR = lumpedcoverlayers.reflection_coefficient(tCovNIR_virtual, rCovNIR, rCanNIR_virtual, u2=setpoint.U_Canopy)
+
+        aCanNIR = lumpedcoverlayers.absorption_coefficient(tMultiLayerCanNIR, rMultiLayerCanNIR)  # in equation 8.33
+
+        # ---> R_NIR_SunCan
+        R_NIR_SunCan = heatfluxes.R_NIR_SunCan(h_GlobAir=C.Global.h_GlobAir,
+                                               a_CanNIR=aCanNIR,
+                                               h_GlobNIR=C.Global.h_GlobNIR,
+                                               i_Glob=iGlob)
+
+        # ***************************************************
+        # Calculate NIR absorption coefficient of the floor, Using in equation 8.34
+        # ***************************************************
+        tFlrNIR_virtual = 1 - C.Greenhouse.r_FlrNIR  # Equation 8.30
+
+        tMultiLayerFlrNIR = lumpedcoverlayers.transmission_coefficient(tCovNIR_virtual, tFlrNIR_virtual, rCovNIR, C.Greenhouse.r_FlrNIR, u2=setpoint.U_Floor)
+        rMultiLayerFlrNIR = lumpedcoverlayers.reflection_coefficient(tCovNIR_virtual, rCovNIR, C.Greenhouse.r_FlrNIR, u2=setpoint.U_Floor)
+
+        aFlrNIR = lumpedcoverlayers.absorption_coefficient(tMultiLayerFlrNIR, rMultiLayerFlrNIR)  # Using in equation 8.34
+
+        # ***************************************************
         # Canopy heat capacity
+        # ***************************************************
         capCan = capacities.canopy_heat_capacity(C.Global.capLeaf, LAI)
 
+        # ***************************************************
         # The PAR above the canopy
+        # ***************************************************
         R_PAR_Gh = heatfluxes.R_PARGh(C.Global.h_GlobAir, tCovPAR, C.Global.h_GlobPAR, iGlob)
 
         # -> R_PAR_SunCan
@@ -77,7 +142,7 @@ class GreenhouseClimateModel(IndoorClimateModel):
                                                K2_PAR=C.Global.K_2PAR,
                                                LAI=LAI)
         # -> R_NIR_SunCan
-        # TODO: find a_CanNIR (Equation 8.33)
+        # TODO: validate a_CanNIR (Equation 8.33)
 
 
 class VerticalFarmClimateModel(IndoorClimateModel):

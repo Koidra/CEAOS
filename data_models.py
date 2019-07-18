@@ -8,3 +8,5 @@ class Setpoint(NamedTuple):
     U_ShadingScreenPer: float
     U_Roof: float
     U_ThermalScreen: float
+    U_Canopy: float
+    U_Floor: float
