@@ -1,7 +1,7 @@
 from typing import Union
 
 
-def params_except_keys(in_params: dict, except_keys: Union[str,list])->dict:
+def params_except_keys(in_params: dict, except_keys: Union[str, list]) -> dict:
     """
     Remove specific item in dict by its key(s)
     :param in_params: input dict
