@@ -6,7 +6,6 @@ class Setpoints(NamedTuple):
     U_Boil: float
     U_HeatInd: float
     U_HeatGeo: float
-    U_Pad: float
     U_MechCool: float
     U_Fog: float
     U_Roof: float

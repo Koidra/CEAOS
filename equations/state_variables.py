@@ -22,7 +22,7 @@ from equations.radiation_fluxes import *
 from equations.vapor_fluxes import canopy_transpiration, fogging_system_to_greenhouse_air_latent_vapor_flux, \
     heat_blower_to_greenhouse_air_vapor_flux, greenhouse_air_to_thermal_screen_vapor_flux, \
     greenhouse_air_to_above_thermal_screen_vapor_flux, greenhouse_air_to_outdoor_vapor_flux, \
-    greenhouse_air_to_outdoor_vapor_flux_by_pad_fan_system, greenhouse_air_to_mechanical_cooling_vapor_flux, \
+    greenhouse_air_to_mechanical_cooling_vapor_flux, \
     above_thermal_screen_to_internal_cover_vapor_flux, above_thermal_screen_to_outdoor_vapor_flux
 
 
@@ -52,10 +52,10 @@ def canopy_temperature(setpoints: Setpoints, states: States, weather: Weather):
 def greenhouse_air_temperature(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 2.2 / 8.2
-    cap_Air * air_t = sensible_heat_flux_CanAir + sensible_heat_flux_PadAir + sensible_heat_flux_MechAir
+    cap_Air * air_t = sensible_heat_flux_CanAir + sensible_heat_flux_MechAir
                     + sensible_heat_flux_PipeAir + sensible_heat_flux_PasAir + sensible_heat_flux_BlowAir
                     + radiation_flux_Glob_SunAir - sensible_heat_flux_AirFlr - sensible_heat_flux_AirThScr
-                    - sensible_heat_flux_AirOut - sensible_heat_flux_AirTop - sensible_heat_flux_AirOut_Pad
+                    - sensible_heat_flux_AirOut - sensible_heat_flux_AirTop
                     - latent_heat_flux_AirFog
     """
     air_height = Coefficients.Greenhouse.Construction.air_height
@@ -65,7 +65,6 @@ def greenhouse_air_temperature(setpoints: Setpoints, states: States, weather: We
 
     radiation_flux_Glob_SunAir = construction_elements_global_radiation(states, setpoints, weather)
     sensible_heat_flux_CanAir = sensible_heat_flux_between_canopy_and_air(states)
-    sensible_heat_flux_PadAir = 0  # sensible_heat_flux_between_pad_and_greenhouse_air(setpoints, states)
     sensible_heat_flux_MechAir = sensible_heat_flux_between_mechanical_cooling_and_greenhouse_air(setpoints, states)
     sensible_heat_flux_PipeAir = sensible_heat_flux_between_heating_pipe_and_greenhouse_air(states)
     sensible_heat_flux_PasAir = sensible_heat_flux_between_buffer_and_greenhouse_air(states)
@@ -74,13 +73,12 @@ def greenhouse_air_temperature(setpoints: Setpoints, states: States, weather: We
     sensible_heat_flux_AirThScr = sensible_heat_flux_between_thermal_screen_and_greenhouse_air(states, setpoints)
     sensible_heat_flux_AirOut = sensible_heat_flux_between_outdoor_and_greenhouse_air(states, setpoints, weather)
     sensible_heat_flux_AirTop = sensible_heat_flux_between_above_thermal_screen_and_greenhouse_air(states, setpoints, weather)
-    sensible_heat_flux_AirOut_Pad = sensible_heat_flux_between_greenhouse_air_and_outdoor_by_pad_fan_system(setpoints, states)
     latent_heat_flux_AirFog = latent_heat_flux_between_fogging_and_greenhouse_air(setpoints)
 
-    return (sensible_heat_flux_CanAir + sensible_heat_flux_PadAir + sensible_heat_flux_MechAir
+    return (sensible_heat_flux_CanAir + sensible_heat_flux_MechAir
             + sensible_heat_flux_PipeAir + sensible_heat_flux_PasAir + sensible_heat_flux_BlowAir
             + radiation_flux_Glob_SunAir - sensible_heat_flux_AirFlr - sensible_heat_flux_AirThScr
-            - sensible_heat_flux_AirOut - sensible_heat_flux_AirTop - sensible_heat_flux_AirOut_Pad
+            - sensible_heat_flux_AirOut - sensible_heat_flux_AirTop
             - latent_heat_flux_AirFog) / cap_Air
 
 
@@ -258,24 +256,22 @@ def heating_pipe_system_surface_temperature(setpoints: Setpoints, states: States
 def greenhouse_air_vapor_pressure(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 2.10 / 8.10
-    cap_VP_Air * air_vapor_pressure = mass_vapor_flux_CanAir + mass_vapor_flux_PadAir + mass_vapor_flux_FogAir
+    cap_VP_Air * air_vapor_pressure = mass_vapor_flux_CanAir + mass_vapor_flux_FogAir
                                     + mass_vapor_flux_BlowAir − mass_vapor_flux_AirThScr − mass_vapor_flux_AirTop
-                                    − mass_vapor_flux_AirOut − mass_vapor_flux_AirOut_Pad − mass_vapor_flux_AirMech
+                                    − mass_vapor_flux_AirOut − mass_vapor_flux_AirMech
     """
     cap_VP_Air = air_compartment_water_vapor_capacity(states)
     mass_vapor_flux_CanAir = canopy_transpiration(states, setpoints, weather)
-    mass_vapor_flux_PadAir = 0  # pad_and_fan_to_greenhouse_air_vapor_flux(setpoints)
     mass_vapor_flux_FogAir = fogging_system_to_greenhouse_air_latent_vapor_flux(setpoints)
     mass_vapor_flux_BlowAir = heat_blower_to_greenhouse_air_vapor_flux(setpoints)
     mass_vapor_flux_AirThScr = greenhouse_air_to_thermal_screen_vapor_flux(setpoints, states)
     mass_vapor_flux_AirTop = greenhouse_air_to_above_thermal_screen_vapor_flux(states, setpoints, weather)
     mass_vapor_flux_AirOut = greenhouse_air_to_outdoor_vapor_flux(states, setpoints, weather)
-    mass_vapor_flux_AirOut_Pad = greenhouse_air_to_outdoor_vapor_flux_by_pad_fan_system(setpoints, states)
     mass_vapor_flux_AirMech = greenhouse_air_to_mechanical_cooling_vapor_flux(states, setpoints)
 
-    return (mass_vapor_flux_CanAir + mass_vapor_flux_PadAir + mass_vapor_flux_FogAir
+    return (mass_vapor_flux_CanAir + mass_vapor_flux_FogAir
             + mass_vapor_flux_BlowAir - mass_vapor_flux_AirThScr - mass_vapor_flux_AirTop
-            - mass_vapor_flux_AirOut - mass_vapor_flux_AirOut_Pad - mass_vapor_flux_AirMech) / cap_VP_Air
+            - mass_vapor_flux_AirOut - mass_vapor_flux_AirMech) / cap_VP_Air
 
 
 def top_compartment_vapor_pressure(setpoints: Setpoints, states: States, weather: Weather):
@@ -293,17 +289,16 @@ def top_compartment_vapor_pressure(setpoints: Setpoints, states: States, weather
 def greenhouse_air_CO2(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 2.12 / 8.12
-    cap_CO2_Air * air_CO2 = mass_CO2_flux_BlowAir + mass_CO2_flux_ExtAir + mass_CO2_flux_PadAir
+    cap_CO2_Air * air_CO2 = mass_CO2_flux_BlowAir + mass_CO2_flux_ExtAir
                           - mass_CO2_flux_AirCan - mass_CO2_flux_AirTop - mass_CO2_flux_AirOut
     """
     cap_CO2_Air = Coefficients.Greenhouse.Construction.air_height  # Note: line 45 / setDepParams / GreenLight
     mass_CO2_flux_BlowAir = heat_blower_to_greenhouse_air_CO2_flux(setpoints)
     mass_CO2_flux_ExtAir = external_CO2_added(setpoints)
-    mass_CO2_flux_PadAir = 0  # pad_fan_system_and_greenhouse_air_CO2_flux(states)
     mass_CO2_flux_AirCan = states.MC_AirCan  # TODO: check this
     mass_CO2_flux_AirTop = greenhouse_air_and_above_thermal_screen_CO2_flux(states, setpoints, weather)
     mass_CO2_flux_AirOut = greenhouse_air_and_outdoor_CO2_flux(states, setpoints, weather)
-    return (mass_CO2_flux_BlowAir + mass_CO2_flux_ExtAir + mass_CO2_flux_PadAir
+    return (mass_CO2_flux_BlowAir + mass_CO2_flux_ExtAir
             - mass_CO2_flux_AirCan - mass_CO2_flux_AirTop - mass_CO2_flux_AirOut) / cap_CO2_Air
 
 

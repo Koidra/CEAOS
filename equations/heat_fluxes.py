@@ -15,7 +15,7 @@ from equations.lumped_cover_layers import double_layer_cover_transmission_coeffi
     roof_thermal_screen_PAR_transmission_coefficient, roof_thermal_screen_PAR_reflection_coefficient
 from equations.utils import air_density
 from equations.utils import mechanical_cooling_to_greenhouse_air_heat_exchange_coefficient, \
-    pad_and_fan_system_ventilation_flux, total_side_vents_ventilation_rates, total_roof_ventilation_rates, \
+    total_side_vents_ventilation_rates, total_roof_ventilation_rates, \
     saturation_vapor_pressure
 from equations.vapor_fluxes import canopy_transpiration, fogging_system_to_greenhouse_air_latent_vapor_flux, \
     air_to_obj_vapor_flux
@@ -157,28 +157,6 @@ def sensible_heat_flux_between_canopy_and_air(states: States):
 def latent_heat_flux_between_canopy_and_air(states: States, setpoints: Setpoints, weather: Weather):
     MV_CanAir = canopy_transpiration(states, setpoints, weather)
     return latent_heat_fluxes(MV_CanAir)
-
-
-def sensible_heat_flux_between_greenhouse_air_and_outdoor_by_pad_fan_system(setpoints: Setpoints, states: States):
-    # Equation 8.61
-    f_Pad = pad_and_fan_system_ventilation_flux(setpoints)
-    density_air = air_density()
-    c_pAir = Coefficients.Outside.c_pAir
-    air_t = states.air_t
-    return f_Pad * density_air * c_pAir * air_t
-
-# Not included in GreenLight
-# def sensible_heat_flux_between_pad_and_greenhouse_air(setpoints: Setpoints, states: States):
-#     # Equation 8.60
-#     f_Pad = pad_and_fan_system_ventilation_flux(setpoints)
-#     density_air = air_density()
-#     c_pAir = Constants.Global.c_pAir
-#     outdoor_t = states.outdoor_t
-#     evaporation_latent_heat = Constants.Global.evaporation_latent_heat
-#     eta_Pad = Constants.Greenhouse.ActiveClimateControl.eta_Pad
-#     x_Pad =
-#     x_Out =
-#     return f_Pad * (density_air * c_pAir * outdoor_t - evaporation_latent_heat * density_air * (eta_Pad * (x_Pad - x_Out)))
 
 
 def sensible_heat_flux_between_mechanical_cooling_and_greenhouse_air(setpoints: Setpoints, states: States):

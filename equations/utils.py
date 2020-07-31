@@ -14,14 +14,6 @@ def air_density():
     return density_Air0 * math.exp(g * M_Air * elevation_height / (293.15 * R))
 
 
-def pad_and_fan_system_ventilation_flux(setpoints: Setpoints):
-    # Equation 8.59
-    U_Pad = setpoints.U_Pad
-    phi_Pad = Coefficients.Greenhouse.ActiveClimateControl.phi_Pad
-    floor_surface = Coefficients.Greenhouse.Construction.floor_surface
-    return U_Pad * phi_Pad / floor_surface
-
-
 def mechanical_cooling_to_greenhouse_air_heat_exchange_coefficient(setpoints: Setpoints, states: States):
     # Equation 8.63
     U_MechCool = setpoints.U_MechCool

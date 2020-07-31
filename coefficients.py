@@ -154,9 +154,7 @@ class Coefficients(object):
             pipe_length = 1.25  # Length of the heating pipes per square meter greenhouse
 
         class ActiveClimateControl:
-            # eta_Pad Efficiency of the pad and fan system
             # phi_Fog Capacity of the fogging system
-            # phi_Pad Capacity of the air flux through the pad and fan system
             # phi_VentForced Air flow capacity of the forced ventilation system
             extCO2_capacity = 4.3E5  # Capacity of the external CO2 source
             # COP_MechCool Coefficient of performance of the mechanical cooling system

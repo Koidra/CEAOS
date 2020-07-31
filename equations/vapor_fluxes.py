@@ -3,7 +3,7 @@ import math
 from coefficients import Coefficients
 from data_models import Setpoints, States, Weather
 from equations.canopy_transpiration import canopy_transpiration_vapor_transfer_coefficient
-from equations.utils import pad_and_fan_system_ventilation_flux, total_side_vents_ventilation_rates, \
+from equations.utils import total_side_vents_ventilation_rates, \
     mechanical_cooling_to_greenhouse_air_heat_exchange_coefficient, total_roof_ventilation_rates, \
     saturation_vapor_pressure
 from equations.heat_fluxes import sensible_heat_flux_between_direct_air_heater_and_greenhouse_air, \
@@ -46,32 +46,11 @@ def fogging_system_to_greenhouse_air_latent_vapor_flux(setpoints: Setpoints):
     return U_Fog * phi_Fog / floor_surface
 
 
-# Not included in GreenLight
-# def pad_and_fan_to_greenhouse_air_vapor_flux(setpoints: Setpoints):
-#     # Equation 8.58
-#     rho_Air = air_density()
-#     f_Pad = pad_and_fan_system_ventilation_flux(setpoints)
-#     eta_Pad = Constants.Greenhouse.ActiveClimateControl.eta_Pad
-#     x_Pad =
-#     x_Out =
-#     return rho_Air * f_Pad * (eta_Pad * (x_Pad - x_Out) + x_Out)
-
-
 def heat_blower_to_greenhouse_air_vapor_flux(setpoints: Setpoints):
     # Equation 8.55
     eta_HeatVap = Coefficients.Outside.eta_HeatVap
     sensible_heat_flux_BlowAir = sensible_heat_flux_between_direct_air_heater_and_greenhouse_air(setpoints)
     return eta_HeatVap * sensible_heat_flux_BlowAir
-
-
-def greenhouse_air_to_outdoor_vapor_flux_by_pad_fan_system(setpoints: Setpoints, states: States):
-    # Equation 8.62
-    f_Pad = pad_and_fan_system_ventilation_flux(setpoints)
-    M_Water = Coefficients.Outside.M_Water
-    R = Coefficients.Outside.R
-    air_t = states.air_t
-    VP_Air = saturation_vapor_pressure(air_t)
-    return f_Pad * M_Water * (VP_Air / (air_t + 273.15)) / R
 
 
 def greenhouse_air_to_thermal_screen_vapor_flux(setpoints: Setpoints, states: States):

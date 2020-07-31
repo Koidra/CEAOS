@@ -10,14 +10,6 @@ def general_CO2_flux(f_12: float, CO2_1, CO2_2):
     return f_12 * (CO2_1 - CO2_2)
 
 
-# Not included in GreenLight
-# def pad_fan_system_and_greenhouse_air_CO2_flux(states: States):
-#     f_PadAir =
-#     CO2_Pad =
-#     CO2_Air = states.CO2_Air
-#     return general_CO2_flux(f_PadAir, CO2_Pad, CO2_Air)
-
-
 def greenhouse_air_and_above_thermal_screen_CO2_flux(states: States, setpoints: Setpoints, weather: Weather):
     f_ThScr = thermal_screen_air_flux_rate(setpoints, states, weather)
     f_AirTop = f_ThScr
