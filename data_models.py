@@ -22,10 +22,8 @@ class Setpoints(NamedTuple):
     U_Lamp: float
     U_IntLamp: float
 
-class Inputs(NamedTuple):
-    outdoor_t: float
-    sky_t: float
-    mechcool_t: float
+
+class States(NamedTuple):
     pipe_t: float
     can_t: float
     air_t: float
@@ -35,16 +33,19 @@ class Inputs(NamedTuple):
     above_thermal_screen_t: float
     floor_t: float
     soil_j_t: [float, float, float, float, float]
-    soil_out_t: float
-    CO2_Out: float
     CO2_Air: float
     CO2_Top: float
-    VP_Out: float
-    I_Glob: float
-    v_Wind: float
+    # Recheck these vars
     LAI: float
+    mechcool_t: float
     MC_AirCan: float
-    # soil_mean_t: float
-    # t: float
-    # a_0: float
-    # beta: float
+
+
+class Weather(NamedTuple):
+    I_Glob: float
+    outdoor_t: float
+    sky_t: float
+    soil_out_t: float
+    CO2_Out: float
+    VP_Out: float
+    v_Wind: float
