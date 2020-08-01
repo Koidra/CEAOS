@@ -10,7 +10,7 @@ def canopy_heat_capacity(states: States) -> float:
 
     :return: [J K^(-1) m^(-2)]
     """
-    return Coefficients.Outside.cap_Leaf * states.LAI
+    return Coefficients.Outside.cap_Leaf * states.leaf_area_index
 
 
 def internal_external_canopy_heat_capacity(lumped_cover_heat_capacity: float) -> float:
@@ -45,6 +45,6 @@ def air_compartment_water_vapor_capacity(states: States):
     # Equation 8.25
     M_Water = Coefficients.Outside.M_Water
     air_height = Coefficients.Greenhouse.Construction.air_height
-    R = Coefficients.Outside.R
+    M_Gas = Coefficients.Outside.M_Gas
     air_t = states.air_t
-    return M_Water * air_height / ((air_t + 273.15) * R)
+    return M_Water * air_height / ((air_t + 273.15) * M_Gas)

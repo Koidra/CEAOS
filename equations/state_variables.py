@@ -112,7 +112,7 @@ def floor_temperature(setpoints: Setpoints, states: States, weather: Weather):
 def soil_temperature(jth: int, states: States, weather: Weather):  # j = 1,2,..,5
     """
     Equation 2.4 / 8.4
-    cap_soil_j * soil_j_t = sensible_heat_flux_soil_j_1_soil_j - sensible_heat_flux_soil_j_soil_j_1
+    cap_soil_j * soil_j_t = sensible_heat_flux_soil_j_minus_soil_j - sensible_heat_flux_soil_j_soil_j_plus
     0 is Floor, 6 is SoOut
     """
 
@@ -121,15 +121,15 @@ def soil_temperature(jth: int, states: States, weather: Weather):  # j = 1,2,..,
     h_soil_j_plus = 1.28 if jth == 5 else Coefficients.Greenhouse.Soil.soil_thicknesses[jth]  # Assumed by GreenLight's authors, line 83, setGlParams
     cap_soil_j = h_soil_j * Coefficients.Greenhouse.Soil.rho_c_p_So
     soil_heat_conductivity = Coefficients.Greenhouse.Soil.soil_heat_conductivity
-    HEC_soil_j_1_soil_j = 2 * soil_heat_conductivity / (h_soil_j_minus + h_soil_j)
-    HEC_soil_j_soil_j_1 = 2 * soil_heat_conductivity / (h_soil_j + h_soil_j_plus)
-    T_soil_j_minus = states.floor_t if jth == 1 else states.soil_j_t[jth-2]
-    T_soil_j = states.soil_j_t[jth-1]
-    T_soil_j_plus = weather.soil_out_t if jth == 5 else states.soil_j_t[jth]
+    HEC_soil_j_minus_soil_j = 2 * soil_heat_conductivity / (h_soil_j_minus + h_soil_j)
+    HEC_soil_j_soil_j_plus = 2 * soil_heat_conductivity / (h_soil_j + h_soil_j_plus)
+    soil_j_minus_t = states.floor_t if jth == 1 else states.soil_j_t[jth - 2]
+    soil_j_t = states.soil_j_t[jth - 1]
+    soil_j_plus_t = weather.soil_out_t if jth == 5 else states.soil_j_t[jth]
 
-    sensible_heat_flux_soil_j_1_soil_j = convective_and_conductive_heat_fluxes(HEC_soil_j_1_soil_j, T_soil_j_minus, T_soil_j)
-    sensible_heat_flux_soil_j_soil_j_1 = convective_and_conductive_heat_fluxes(HEC_soil_j_soil_j_1, T_soil_j, T_soil_j_plus)
-    return (sensible_heat_flux_soil_j_1_soil_j - sensible_heat_flux_soil_j_soil_j_1) / cap_soil_j
+    sensible_heat_flux_soil_j_minus_soil_j = convective_and_conductive_heat_fluxes(HEC_soil_j_minus_soil_j, soil_j_minus_t, soil_j_t)
+    sensible_heat_flux_soil_j_soil_j_plus = convective_and_conductive_heat_fluxes(HEC_soil_j_soil_j_plus, soil_j_t, soil_j_plus_t)
+    return (sensible_heat_flux_soil_j_minus_soil_j - sensible_heat_flux_soil_j_soil_j_plus) / cap_soil_j
 
 
 def thermal_screen_temperature(setpoints: Setpoints, states: States, weather: Weather):
@@ -164,13 +164,13 @@ def top_compartment_temperature(setpoints: Setpoints, states: States, weather: W
     TODO: need to recheck if top compartment params are the same with air params
     """
     h_Top = Coefficients.Greenhouse.Construction.greenhouse_height - Coefficients.Greenhouse.Construction.air_height
-    R = Coefficients.Outside.R
+    M_Gas = Coefficients.Outside.M_Gas
     M_Air = Coefficients.Outside.M_Air
     elevation_height = Coefficients.Greenhouse.Construction.elevation_height
     pressure = 101325 * (1 - 2.5577e-5 * elevation_height) ** 5.25588
-    rho_Top = M_Air*pressure/((states.above_thermal_screen_t+273.15)*R)  # Note: line 704 / setGlAux / GreenLight
+    density_Top = M_Air*pressure/((states.above_thermal_screen_t+273.15) * M_Gas)  # Note: line 704 / setGlAux / GreenLight
     c_pTop = Coefficients.Outside.c_pAir
-    cap_Top = remaining_object_heat_capacity(h_Top, rho_Top, c_pTop)
+    cap_Top = remaining_object_heat_capacity(h_Top, density_Top, c_pTop)
 
     sensible_heat_flux_ThScrTop = sensible_heat_flux_between_thermal_screen_and_above_thermal_screen(states, setpoints)
     sensible_heat_flux_AirTop = sensible_heat_flux_between_above_thermal_screen_and_greenhouse_air(states, setpoints, weather)
@@ -229,17 +229,17 @@ def heating_pipe_system_surface_temperature(setpoints: Setpoints, states: States
     cap_Pipe = heating_pipe_heat_capacity()
 
     U_Boil = setpoints.U_Boil
-    P_Boil = Coefficients.Greenhouse.ActiveClimateControl.P_Boil
-    floor_surface = Coefficients.Greenhouse.Construction.floor_surface
-    sensible_heat_flux_BoilPipe = heat_flux_to_heating_pipe(U_Boil, P_Boil, floor_surface)
+    heat_cap_Boil = Coefficients.Greenhouse.ActiveClimateControl.heat_cap_Boil
+    floor_area = Coefficients.Greenhouse.Construction.floor_area
+    sensible_heat_flux_BoilPipe = heat_flux_to_heating_pipe(U_Boil, heat_cap_Boil, floor_area)
 
     U_Ind = setpoints.U_Ind
-    P_Ind = Coefficients.Greenhouse.ActiveClimateControl.P_Ind
-    sensible_heat_flux_IndPipe = heat_flux_to_heating_pipe(U_Ind, P_Ind, floor_surface)
+    heat_cap_Ind = Coefficients.Greenhouse.ActiveClimateControl.heat_cap_Ind
+    sensible_heat_flux_IndPipe = heat_flux_to_heating_pipe(U_Ind, heat_cap_Ind, floor_area)
 
     U_Geo = setpoints.U_Geo
-    P_Geo = Coefficients.Greenhouse.ActiveClimateControl.P_Geo
-    sensible_heat_flux_GeoPipe = heat_flux_to_heating_pipe(U_Geo, P_Geo, floor_surface)
+    heat_cap_Geo = Coefficients.Greenhouse.ActiveClimateControl.heat_cap_Geo
+    sensible_heat_flux_GeoPipe = heat_flux_to_heating_pipe(U_Geo, heat_cap_Geo, floor_area)
 
     radiation_flux_PipeSky = FIR_from_heating_pipe_to_sky(states, setpoints, weather)
     radiation_flux_PipeCov_in = FIR_from_heating_pipe_to_internal_cover(states, setpoints)
@@ -256,11 +256,11 @@ def heating_pipe_system_surface_temperature(setpoints: Setpoints, states: States
 def greenhouse_air_vapor_pressure(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 2.10 / 8.10
-    cap_VP_Air * air_vapor_pressure = mass_vapor_flux_CanAir + mass_vapor_flux_FogAir
+    cap_vapor_Air * air_vapor_pressure = mass_vapor_flux_CanAir + mass_vapor_flux_FogAir
                                     + mass_vapor_flux_BlowAir − mass_vapor_flux_AirThScr − mass_vapor_flux_AirTop
                                     − mass_vapor_flux_AirOut − mass_vapor_flux_AirMech
     """
-    cap_VP_Air = air_compartment_water_vapor_capacity(states)
+    cap_vapor_Air = air_compartment_water_vapor_capacity(states)
     mass_vapor_flux_CanAir = canopy_transpiration(states, setpoints, weather)
     mass_vapor_flux_FogAir = fogging_system_to_greenhouse_air_latent_vapor_flux(setpoints)
     mass_vapor_flux_BlowAir = heat_blower_to_greenhouse_air_vapor_flux(setpoints)
@@ -271,19 +271,19 @@ def greenhouse_air_vapor_pressure(setpoints: Setpoints, states: States, weather:
 
     return (mass_vapor_flux_CanAir + mass_vapor_flux_FogAir
             + mass_vapor_flux_BlowAir - mass_vapor_flux_AirThScr - mass_vapor_flux_AirTop
-            - mass_vapor_flux_AirOut - mass_vapor_flux_AirMech) / cap_VP_Air
+            - mass_vapor_flux_AirOut - mass_vapor_flux_AirMech) / cap_vapor_Air
 
 
 def top_compartment_vapor_pressure(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 2.11 / 8.11
-    cap_VP_Top * top_vapor_pressure = mass_vapor_flux_AirTop − mass_vapor_flux_TopCov_in − mass_vapor_flux_TopOut
+    cap_vapor_Top * top_vapor_pressure = mass_vapor_flux_AirTop − mass_vapor_flux_TopCov_in − mass_vapor_flux_TopOut
     """
-    cap_VP_Top = air_compartment_water_vapor_capacity(states)
+    cap_vapor_Top = air_compartment_water_vapor_capacity(states)
     mass_vapor_flux_AirTop = greenhouse_air_to_above_thermal_screen_vapor_flux(states, setpoints, weather)
     mass_vapor_flux_TopCov_in = above_thermal_screen_to_internal_cover_vapor_flux(states)
     mass_vapor_flux_TopOut = above_thermal_screen_to_outdoor_vapor_flux(states, setpoints, weather)
-    return (mass_vapor_flux_AirTop - mass_vapor_flux_TopCov_in - mass_vapor_flux_TopOut) / cap_VP_Top
+    return (mass_vapor_flux_AirTop - mass_vapor_flux_TopCov_in - mass_vapor_flux_TopOut) / cap_vapor_Top
 
 
 def greenhouse_air_CO2(setpoints: Setpoints, states: States, weather: Weather):
@@ -295,7 +295,7 @@ def greenhouse_air_CO2(setpoints: Setpoints, states: States, weather: Weather):
     cap_CO2_Air = Coefficients.Greenhouse.Construction.air_height  # Note: line 45 / setDepParams / GreenLight
     mass_CO2_flux_BlowAir = heat_blower_to_greenhouse_air_CO2_flux(setpoints)
     mass_CO2_flux_ExtAir = external_CO2_added(setpoints)
-    mass_CO2_flux_AirCan = states.MC_AirCan  # TODO: check this
+    mass_CO2_flux_AirCan = states.mass_CO2_flux_AirCan  # TODO: check this
     mass_CO2_flux_AirTop = greenhouse_air_and_above_thermal_screen_CO2_flux(states, setpoints, weather)
     mass_CO2_flux_AirOut = greenhouse_air_and_outdoor_CO2_flux(states, setpoints, weather)
     return (mass_CO2_flux_BlowAir + mass_CO2_flux_ExtAir

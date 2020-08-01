@@ -34,16 +34,16 @@ class States(NamedTuple):
     CO2_Air: float
     CO2_Top: float
     # Recheck these vars
-    LAI: float
+    leaf_area_index: float
     mechcool_t: float
-    MC_AirCan: float
+    mass_CO2_flux_AirCan: float
 
 
 class Weather(NamedTuple):
-    I_Glob: float
+    outdoor_global_rad: float
     outdoor_t: float
     sky_t: float
     soil_out_t: float
     CO2_Out: float
-    VP_Out: float
+    outdoor_vapor_pressure: float
     v_Wind: float

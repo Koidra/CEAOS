@@ -10,7 +10,7 @@ class Coefficients(object):
         pass
 
     class Outside:
-        canopy_air_convective_heat_exchange_coefficient = 5  # Convective heat exchange coefficient from the canopy leaf to the greenhouse air
+        canopy_air_convective_heat_exchange_coef = 5  # Convective heat exchange coefficient from the canopy leaf to the greenhouse air
         evaporation_latent_heat = 2.45E6  # Latent heat of evaporation
         sigma = 5.670E-8  # Stefan Boltzmann constant
         can_FIR_emission_coefficient = 1  # FIR emission coefficient of the canopy
@@ -38,26 +38,26 @@ class Coefficients(object):
         c_pAir = 1E3  # Specific heat capacity of the air
         c_pSteel = 0.64E3  # Specific heat capacity of steel
         c_pWater = 4.18E3  # Specific heat capacity of water
-        g = 9.81  # The acceleration of gravity
+        gravity = 9.81  # The acceleration of gravity
         canopy_PAR_extinction_coefficient = 0.7  # PAR extinction coefficient of the canopy
         floor_PAR_extinction_coefficient = 0.7  # PAR extinction coefficient of the canopy when PAR is reflected from the floor
         canopy_NIR_extinction_coefficient = 0.27  # Extinction coefficient of the canopy for NIR
         canopy_FIR_extinction_coefficient = 0.94  # Extinction coefficient of the canopy for FIR
         M_Air = 28.96  # Molar mass of air
         M_Water = 18  # Molar mass of water
-        R = 8.314E3  # Molar gas constant
-        R_Can_SP = 5  # The radiation value above the canopy when the night becomes day and vice versa
-        r_b = 275  # Boundary layer resistance of the canopy for vapor transport
-        r_s_min = 82.0  # The minimum canopy resistance for transpiration
+        M_Gas = 8.314E3  # Molar gas constant
+        rad_canopy_setpoint = 5  # The radiation value above the canopy when the night becomes day and vice versa
+        boundary_layer_resistance = 275  # Boundary layer resistance of the canopy for vapor transport
+        min_canopy_transpiration_resistance = 82.0  # The minimum canopy resistance for transpiration
         s_r_s = -1  # The slope of the differentiable switch for the stomatical resistance model
         s_MV12 = -0.1  # The slope of the differentiable switch function for vapor pressure differences
 
     class Greenhouse:
         class Construction:
-            eta_GlobAir = 0.1  # The ratio of the global radiation which is absorbed by the greenhouse construction elements
+            ratio_GlobAir = 0.1  # The ratio of the global radiation which is absorbed by the greenhouse construction elements
             mean_greenhouse_cover_slope = 22  # Mean greenhouse cover slope
-            cover_surface = 9.0E4  # Surface of the cover including side-walls
-            floor_surface = 7.8E4  # Surface of the greenhouse floor
+            cover_area = 9.0E4  # Surface of the cover including side-walls
+            floor_area = 7.8E4  # Surface of the greenhouse floor
             c_HECin = 1.86  # Convective heat exchange parameter between cover and outdoor air that depends on the greenhouse shape
             c_HECout_1 = 2.8  # Convective heat exchange variables between cover and outdoor air which depend on the greenhouse shape
             c_HECout_2 = 1.2  # Convective heat exchange variables between cover and outdoor air which depend on the greenhouse shape
@@ -67,16 +67,16 @@ class Coefficients(object):
             greenhouse_height = 5.1  # Mean height of the greenhouse
             C_Gh_d = 0.65  # Ventilation discharge coefficient depends on greenhouse shape
             C_Gh_w = 0.09  # Ventilation global wind pressure coefficient depends on greenhouse shape
-            leakage = 1E-4  # Greenhouse leakage coefficient
-            # h_SideRoof The vertical distance between mid-points of side wall and roof ventilation openings
-            h_Vent = 0.97  # The vertical dimension of a single ventilation opening
+            leakage_coef = 1E-4  # Greenhouse leakage_coef coefficient
+            # side_wall_roof_vent_distance The vertical distance between mid-points of side wall and roof ventilation openings
+            vent_vertical_dimension = 0.97  # The vertical dimension of a single ventilation opening
 
         class Ventilation:
             # eta_ShScrC_d Parameter that determines the effect of the movable shading screen on the discharge coefficient
             # eta_ShScrC_w Parameter that determines the effect of the movable shading screen on the global wind pressure coefficient
-            A_Roof = 7.8E3  # 0.1*floor_surface
+            A_Roof = 7.8E3  # 0.1*floor_area
             A_Side = 0
-            sigma_InsScr = 1  # The porosity of the insect screens
+            porosity_InsScr = 1  # The porosity of the insect screens
             A_Roof_A_Flr = 0.18  # The specific roof ventilation area
             A_Side_A_Flr = 0  # The side ventilation area
 
@@ -141,16 +141,16 @@ class Coefficients(object):
             pipe_length = 1.25  # Length of the heating pipes per square meter greenhouse
 
         class ActiveClimateControl:
-            # phi_Fog Capacity of the fogging system
-            # phi_VentForced Air flow capacity of the forced ventilation system
-            extCO2_capacity = 4.3E5  # Capacity of the external CO2 source
-            # COP_MechCool Coefficient of performance of the mechanical cooling system
+            # cap_Fog Capacity of the fogging system
+            # ventForced_air_flow Air flow capacity of the forced ventilation system
+            cap_extCO2 = 4.3E5  # Capacity of the external CO2 source
+            # perf_MechCool_coef Coefficient of performance of the mechanical cooling system
             # HEC_PasAir The convective heat exchange coefficient between the passive heat storage facility and the greenhouse air temperature
-            # P_Blow Heat capacity of the heat blowers
-            # P_Boil Thermal heat capacity of the boiler
-            # P_Geo Heat capacity of the geothermal heat source
-            # P_Ind Heat capacity of the industrial heat source
-            # P_MechCool Electrical capacity of the mechanical cooling system
+            # heat_cap_Blow Heat capacity of the heat blowers
+            # heat_cap_Boil Thermal heat capacity of the boiler
+            # heat_cap_Geo Heat capacity of the geothermal heat source
+            # heat_cap_Ind Heat capacity of the industrial heat source
+            # ele_cap_MechCool Electrical capacity of the mechanical cooling system
 
         class Lamp:
             # No lamps

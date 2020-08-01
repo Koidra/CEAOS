@@ -20,9 +20,9 @@ def canopy_transpiration_vapor_transfer_coefficient(states: States, setpoints: S
     density_air = air_density()
     c_pAir = Coefficients.Outside.c_pAir
     gamma = Coefficients.Outside.gamma
-    r_b = Coefficients.Outside.r_b
-    r_s = canopy_stomatal_resistance(states, setpoints, weather)
-    return 2 * density_air * c_pAir * states.LAI / (evaporation_latent_heat * gamma * (r_b + r_s))
+    boundary_layer_resistance = Coefficients.Outside.boundary_layer_resistance
+    stomatal_resistance = canopy_stomatal_resistance(states, setpoints, weather)
+    return 2 * density_air * c_pAir * states.leaf_area_index / (evaporation_latent_heat * gamma * (boundary_layer_resistance + stomatal_resistance))
 
 
 def canopy_stomatal_resistance(states: States, setpoints: Setpoints, weather: Weather) -> float:
@@ -31,7 +31,7 @@ def canopy_stomatal_resistance(states: States, setpoints: Setpoints, weather: We
     Equation 8.49
     :return: The stomatal resistance of the canopy [s m^-1]
     """
-    return Coefficients.Outside.r_s_min * resistance_factor(states, setpoints, weather, 'R_Can') * resistance_factor(states, setpoints, weather, 'CO2_Air') * resistance_factor(states, setpoints, weather, 'VP')
+    return Coefficients.Outside.min_canopy_transpiration_resistance * resistance_factor(states, setpoints, weather, 'above_canopy_global_radiation') * resistance_factor(states, setpoints, weather, 'CO2_Air') * resistance_factor(states, setpoints, weather, 'VP')
 
 
 def resistance_factor(states: States, setpoints: Setpoints, weather: Weather, type) -> float:
@@ -40,9 +40,9 @@ def resistance_factor(states: States, setpoints: Setpoints, weather: Weather, ty
     Equation 8.50
     :return: The resistance factors [W m^-2]
     """
-    if type == 'R_Can':
-        I_Glob = weather.I_Glob
-        eta_GlobAir = Coefficients.Greenhouse.Construction.eta_GlobAir
+    if type == 'above_canopy_global_radiation':
+        outdoor_global_rad = weather.outdoor_global_rad
+        ratio_GlobAir = Coefficients.Greenhouse.Construction.ratio_GlobAir
         ratio_GlobPAR = Coefficients.Outside.ratio_GlobPAR
         ratio_GlobNIR = Coefficients.Outside.ratio_GlobNIR
         eta_LampPAR = Coefficients.Greenhouse.Lamp.eta_LampPAR
@@ -63,8 +63,8 @@ def resistance_factor(states: States, setpoints: Setpoints, weather: Weather, ty
         rho_roof_ThSrcPAR = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
 
         # Vanthoor PAR transmission coefficient of the lumped cover
-        tau_CovPAR = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerPAR, tau_roof_ThSrcPAR,
-                                                                 rho_ShSrc_ShSrcPerPAR, rho_roof_ThSrcPAR)
+        cover_PAR_transmission_coefficient = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerPAR, tau_roof_ThSrcPAR,
+                                                                                         rho_ShSrc_ShSrcPerPAR, rho_roof_ThSrcPAR)
 
         # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
         tau_ShSrc_ShSrcPerNIR = shadingscreen_NIR_transmission_coefficient(setpoints)
@@ -81,34 +81,34 @@ def resistance_factor(states: States, setpoints: Setpoints, weather: Weather, ty
                                                                  rho_ShSrc_ShSrcPerNIR, rho_roof_ThSrcNIR)
 
         # Global radiation above the canopy from the sun
-        rCanSun = (1 - eta_GlobAir) * I_Glob * (ratio_GlobPAR * tau_CovPAR + ratio_GlobNIR * tau_CovNIR)
+        rCanSun = (1 - ratio_GlobAir) * outdoor_global_rad * (ratio_GlobPAR * cover_PAR_transmission_coefficient + ratio_GlobNIR * tau_CovNIR)
         # Global radiation above the canopy from the lamps
         rCanLamp = (eta_LampPAR + eta_LampNIR) * qLampIn
         # Global radiation to the canopy from the interlight lamps
         rCanIntLamp = (eta_IntLampPAR + eta_IntLampNIR) * qIntLampIn
         # Global radiation above the canopy
-        R_Can = rCanSun + rCanLamp + rCanIntLamp  # Note: line 338 / setGlAux / GreenLight
-        return (R_Can + Coefficients.Outside.c_evap1) / (R_Can + Coefficients.Outside.c_evap2)
+        above_canopy_global_radiation = rCanSun + rCanLamp + rCanIntLamp  # Note: line 338 / setGlAux / GreenLight
+        return (above_canopy_global_radiation + Coefficients.Outside.c_evap1) / (above_canopy_global_radiation + Coefficients.Outside.c_evap2)
     elif type == 'CO2_Air':
         c_evap3 = smoothed_transpiration_parameters(nth=3, setpoints=setpoints, states=states, weather=weather)
         CO2_Air = states.CO2_Air
         return 1 + c_evap3(Coefficients.Outside.eta_mg_ppm * CO2_Air - 200) ** 2
     elif type == 'VP':
         c_evap4 = smoothed_transpiration_parameters(nth=4, setpoints=setpoints, states=states, weather=weather)
-        VP_Can = saturation_vapor_pressure(states.can_t)
-        VP_Air = saturation_vapor_pressure(states.air_t)
-        return 1 + c_evap4(VP_Can - VP_Air) ** 2
+        canopy_vapor_pressure = saturation_vapor_pressure(states.can_t)
+        air_vapor_pressure = saturation_vapor_pressure(states.air_t)
+        return 1 + c_evap4(canopy_vapor_pressure - air_vapor_pressure) ** 2
 
 
 def differentiable_switch(states: States, setpoints: Setpoints, weather: Weather):
     # Equation 8.51
-    I_Glob = weather.I_Glob
-    eta_GlobAir = Coefficients.Greenhouse.Construction.eta_GlobAir
+    outdoor_global_rad = weather.outdoor_global_rad
+    ratio_GlobAir = Coefficients.Greenhouse.Construction.ratio_GlobAir
     ratio_GlobPAR = Coefficients.Outside.ratio_GlobPAR
     ratio_GlobNIR = Coefficients.Outside.ratio_GlobNIR
     eta_LampPAR = Coefficients.Greenhouse.Lamp.eta_LampPAR
     eta_LampNIR = Coefficients.Greenhouse.Lamp.eta_LampNIR
-    qLampIn = Coefficients.Greenhouse.Lamp.thetaLampMax * setpoints.U_Lamp # line 308 / setGlAux / GreenLight
+    qLampIn = Coefficients.Greenhouse.Lamp.thetaLampMax * setpoints.U_Lamp  # line 308 / setGlAux / GreenLight
     eta_IntLampPAR = Coefficients.Greenhouse.Interlight.eta_IntLampPAR
     eta_IntLampNIR = Coefficients.Greenhouse.Interlight.eta_IntLampNIR
     qIntLampIn = Coefficients.Greenhouse.Interlight.thetaIntLampMax * setpoints.U_IntLamp
@@ -124,7 +124,7 @@ def differentiable_switch(states: States, setpoints: Setpoints, weather: Weather
     rho_roof_ThSrcPAR = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
 
     # Vanthoor PAR transmission coefficient of the lumped cover
-    tau_CovPAR = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerPAR, tau_roof_ThSrcPAR, rho_ShSrc_ShSrcPerPAR, rho_roof_ThSrcPAR)
+    cover_PAR_transmission_coefficient = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerPAR, tau_roof_ThSrcPAR, rho_ShSrc_ShSrcPerPAR, rho_roof_ThSrcPAR)
 
     # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
     tau_ShSrc_ShSrcPerNIR = shadingscreen_NIR_transmission_coefficient(setpoints)
@@ -140,14 +140,14 @@ def differentiable_switch(states: States, setpoints: Setpoints, weather: Weather
     tau_CovNIR = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerNIR, tau_roof_ThSrcNIR, rho_ShSrc_ShSrcPerNIR, rho_roof_ThSrcNIR)
 
     # Global radiation above the canopy from the sun
-    rCanSun = (1 - eta_GlobAir) * I_Glob * (ratio_GlobPAR * tau_CovPAR + ratio_GlobNIR * tau_CovNIR)
+    rCanSun = (1 - ratio_GlobAir) * outdoor_global_rad * (ratio_GlobPAR * cover_PAR_transmission_coefficient + ratio_GlobNIR * tau_CovNIR)
     # Global radiation above the canopy from the lamps
     rCanLamp = (eta_LampPAR + eta_LampNIR) * qLampIn
     # Global radiation to the canopy from the interlight lamps
     rCanIntLamp = (eta_IntLampPAR + eta_IntLampNIR) * qIntLampIn
     # Global radiation above the canopy
-    R_Can = rCanSun + rCanLamp + rCanIntLamp  # Note: line 338 / setGlAux / GreenLight
-    return 1 / (1 + math.exp(Coefficients.Outside.s_r_s(R_Can - Coefficients.Outside.R_Can_SP)))
+    above_canopy_global_radiation = rCanSun + rCanLamp + rCanIntLamp  # Note: line 338 / setGlAux / GreenLight
+    return 1 / (1 + math.exp(Coefficients.Outside.s_r_s(above_canopy_global_radiation - Coefficients.Outside.rad_canopy_setpoint)))
 
 
 def smoothed_transpiration_parameters(nth: int, states: States, setpoints: Setpoints, weather: Weather):
