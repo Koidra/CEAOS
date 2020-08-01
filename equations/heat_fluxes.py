@@ -88,7 +88,7 @@ def construction_elements_global_radiation(states: States, setpoints: Setpoints,
     rho_roof_ThSrcPAR = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
 
     # NIR absorption coefficient of the canopy
-    a_CanNIR = 1 - tau_CovCanFlrNIR - rho_CovCanFlrNIR # page 213
+    a_CanNIR = 1 - tau_CovCanFlrNIR - rho_CovCanFlrNIR  # page 213
     # NIR absorption coefficient of the floor
     floor_surfaceNIR = tau_CovCanFlrNIR  # page 213
 
@@ -132,7 +132,7 @@ def thermal_screen_air_flux_rate(setpoints: Setpoints, states: States, weather: 
     elevation_height = Coefficients.Greenhouse.Construction.elevation_height
     pressure = 101325 * (1 - 2.5577e-5 * elevation_height) ** 5.25588
     rho_Top = M_Air*pressure/((states.above_thermal_screen_t+273.15)*R)
-    rho_Out = rho_Top # = rho_Top, line 715 / setGlAux / GreenLight
+    rho_Out = rho_Top  # = rho_Top, line 715 / setGlAux / GreenLight
     rho_mean_Air = (density_air + rho_Out) / 2
     g = Coefficients.Outside.g
     return U_ThScr * thScr_flux_coefficient * abs(air_t-outdoor_t) ** 0.66 + (1-U_ThScr) * (0.5 * rho_mean_Air * (1-U_ThScr) * g * abs(density_air - rho_Out)) ** 0.5 / rho_mean_Air
@@ -186,9 +186,10 @@ def sensible_heat_flux_between_direct_air_heater_and_greenhouse_air(setpoints: S
 def sensible_heat_flux_between_buffer_and_greenhouse_air(states: States):
     # Equation 8.57
     HEC_PasAir = Coefficients.Greenhouse.ActiveClimateControl.HEC_PasAir
-    soil_3_t = states.soil_j_t[2] # third layer
+    soil_3_t = states.soil_j_t[2]  # third layer
     air_t = states.air_t
     return HEC_PasAir * (soil_3_t - air_t)
+
 
 def sensible_heat_flux_between_floor_and_greenhouse_air(states: States):
     floor_t = states.floor_t
@@ -213,7 +214,7 @@ def sensible_heat_flux_between_outdoor_and_greenhouse_air(states: States, setpoi
     outdoor_t = weather.outdoor_t
     density_air = air_density()
     f_VentSide = total_side_vents_ventilation_rates(setpoints, states, weather)
-    f_VentForced = 0 # According to GreenLight, forced ventilation doesn't exist in this greenhouse
+    f_VentForced = 0  # According to GreenLight, forced ventilation doesn't exist in this greenhouse
     HEC_AirOut = density_air * c_pAir * (f_VentSide + f_VentForced)
     return convective_and_conductive_heat_fluxes(HEC_AirOut, air_t, outdoor_t)
 
@@ -293,10 +294,11 @@ def latent_heat_flux_between_above_thermal_screen_and_internal_cover(states: Sta
     MV_TopCov_in = air_to_obj_vapor_flux(VP_Top, VP_Cov_in, HEC_TopCov_in)
     return latent_heat_fluxes(MV_TopCov_in)
 
+
 def sensible_heat_flux_between_internal_cover_and_external_cover(states: States, setpoints: Setpoints):
     internal_cov_t = states.internal_cov_t
     external_cov_t = states.external_cov_t
-    HEC_Cov_in_Cov_e = lumped_cover_conductive_heat_flux(setpoints) # Note: line 819 / setGlAux / GreenLight
+    HEC_Cov_in_Cov_e = lumped_cover_conductive_heat_flux(setpoints)  # Note: line 819 / setGlAux / GreenLight
     return convective_and_conductive_heat_fluxes(HEC_Cov_in_Cov_e, internal_cov_t, external_cov_t)
 
 

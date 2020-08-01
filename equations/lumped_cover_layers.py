@@ -4,7 +4,7 @@ Based on section 8.4
 r_: The reflection coefficient of the layer
 t_: The transmission coefficient of the layer
 
-The default model contains four cover layers, i.e.
+The default model contains three cover layers, i.e.
 a movable outdoor shading screen (ShScr),
 a semi-permanent shading screen (ShScrPer),
 the greenhouse roof (Rf) and
@@ -57,22 +57,17 @@ def absorption_coefficient(t, r):
 def shadingscreen_PAR_transmission_coefficient(setpoints: Setpoints):
     # Equation 8.16
     U_ShScr = setpoints.U_ShScr
-    U_ShScrPer = setpoints.U_ShScrPer
     shScr_PAR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
     shScr_PAR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
-    shScrPer_NIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_PAR_transmission_coefficient
-    shScrPer_PAR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_PAR_reflection_coefficient
-    return (1 - U_ShScr*(1-shScr_PAR_transmission_coefficient))*(1-U_ShScrPer*(1-shScrPer_NIR_transmission_coefficient)) / (1 - U_ShScr*shScr_PAR_reflection_coefficient*U_ShScrPer*shScrPer_PAR_reflection_coefficient)
+    return (1 - U_ShScr*(1-shScr_PAR_transmission_coefficient)) / (1 - U_ShScr*shScr_PAR_reflection_coefficient)
 
 
 def shadingscreen_PAR_reflection_coefficient(setpoints: Setpoints):
     # Equation 8.17
     U_ShScr = setpoints.U_ShScr
-    U_ShScrPer = setpoints.U_ShScrPer
     shScr_PAR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
     shScr_PAR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
-    shScrPer_PAR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_PAR_reflection_coefficient
-    return U_ShScr * shScr_PAR_reflection_coefficient + (1 - U_ShScr * (1-shScr_PAR_transmission_coefficient))**2*U_ShScrPer*shScrPer_PAR_reflection_coefficient/(1-U_ShScr*shScr_PAR_reflection_coefficient*U_ShScrPer*shScrPer_PAR_reflection_coefficient)
+    return U_ShScr * shScr_PAR_reflection_coefficient + (1 - U_ShScr * (1-shScr_PAR_transmission_coefficient))**2/(1-U_ShScr*shScr_PAR_reflection_coefficient)
 
 
 def roof_thermal_screen_PAR_transmission_coefficient(setpoints: Setpoints):
@@ -99,22 +94,17 @@ def roof_thermal_screen_PAR_reflection_coefficient(setpoints: Setpoints):
 def shadingscreen_NIR_transmission_coefficient(setpoints: Setpoints):
     # Equation 8.16
     U_ShScr = setpoints.U_ShScr
-    U_ShScrPer = setpoints.U_ShScrPer
     shScr_NIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
     shScr_NIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
-    shScrPer_NIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_NIR_transmission_coefficient
-    shScrPer_NIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_NIR_reflection_coefficient
-    return (1 - U_ShScr*(1-shScr_NIR_transmission_coefficient))*(1-U_ShScrPer*(1-shScrPer_NIR_transmission_coefficient)) / (1 - U_ShScr*shScr_NIR_reflection_coefficient*U_ShScrPer*shScrPer_NIR_reflection_coefficient)
+    return (1 - U_ShScr*(1-shScr_NIR_transmission_coefficient)) / (1 - U_ShScr*shScr_NIR_reflection_coefficient)
 
 
 def shadingscreen_NIR_reflection_coefficient(setpoints: Setpoints):
     # Equation 8.17
     U_ShScr = setpoints.U_ShScr
-    U_ShScrPer = setpoints.U_ShScrPer
     shScr_NIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
     shScr_NIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
-    shScrPer_NIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_NIR_reflection_coefficient
-    return U_ShScr * shScr_NIR_reflection_coefficient + (1 - U_ShScr * (1-shScr_NIR_transmission_coefficient))**2*U_ShScrPer*shScrPer_NIR_reflection_coefficient/(1-U_ShScr*shScr_NIR_reflection_coefficient*U_ShScrPer*shScrPer_NIR_reflection_coefficient)
+    return U_ShScr * shScr_NIR_reflection_coefficient + (1 - U_ShScr * (1-shScr_NIR_transmission_coefficient))**2/(1-U_ShScr*shScr_NIR_reflection_coefficient)
 
 
 def roof_thermal_screen_NIR_transmission_coefficient(setpoints: Setpoints):
@@ -141,21 +131,14 @@ def roof_thermal_screen_NIR_reflection_coefficient(setpoints: Setpoints):
 def lumped_cover_heat_capacity(setpoints: Setpoints):
     # Equation 8.18
     mean_greenhouse_cover_slope = Coefficients.Greenhouse.Construction.mean_greenhouse_cover_slope
-    U_ShScrPer = setpoints.U_ShScrPer
-    shScrPer_thickness = Coefficients.Greenhouse.Whitewash.shScrPer_thickness
-    shScrPer_density = Coefficients.Greenhouse.Whitewash.shScrPer_density
-    c_p_ShScrPer = Coefficients.Greenhouse.Whitewash.c_p_ShScrPer
     roof_thickness = Coefficients.Greenhouse.Roof.roof_thickness
     roof_density = Coefficients.Greenhouse.Roof.roof_density
     c_p_Rf = Coefficients.Greenhouse.Roof.c_p_Rf
-    return math.cos(mean_greenhouse_cover_slope)*(U_ShScrPer*shScrPer_thickness*shScrPer_density*c_p_ShScrPer + roof_thickness*roof_density*c_p_Rf)
+    return math.cos(mean_greenhouse_cover_slope)*(roof_thickness*roof_density*c_p_Rf)
 
 
 def lumped_cover_conductive_heat_flux(setpoints: Setpoints):
     # Equation 8.19
     roof_thickness = Coefficients.Greenhouse.Roof.roof_thickness
     roof_heat_conductivity = Coefficients.Greenhouse.Roof.roof_heat_conductivity
-    U_ShScrPer = setpoints.U_ShScrPer
-    shScrPer_thickness = Coefficients.Greenhouse.Whitewash.shScrPer_thickness
-    shScrPer_heat_conductivity = Coefficients.Greenhouse.Whitewash.shScrPer_heat_conductivity
-    return (roof_thickness/roof_heat_conductivity + U_ShScrPer*shScrPer_thickness/shScrPer_heat_conductivity)**-1
+    return (roof_thickness/roof_heat_conductivity)**-1

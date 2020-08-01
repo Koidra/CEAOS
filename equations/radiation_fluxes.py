@@ -191,14 +191,10 @@ def FIR_from_canopy_to_internal_cover(states: States, setpoints: Setpoints):
     A_Can = 1 - math.exp(-canopy_FIR_extinction_coefficient * states.LAI)
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
-    rho_CovFIR = double_layer_cover_reflection_coefficient(tau_ShScr_ShScrPerFIR, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
+    rho_CovFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - tau_CovFIR - rho_CovFIR  # = a_CovFIR, line 271 / setGlAux
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
     F_CanCov_in = tau_U_ThScrFIR
@@ -229,13 +225,9 @@ def FIR_from_canopy_to_sky(states: States, setpoints: Setpoints, weather: Weathe
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
     F_CanSky = tau_CovFIR * tau_U_ThScrFIR
     sky_t = weather.sky_t
     return net_far_infrared_radiation_fluxes(A_Can, can_FIR_emission_coefficient, sky_FIR_emission_coefficient, F_CanSky, sigma, can_t, sky_t)
@@ -275,14 +267,10 @@ def FIR_from_floor_to_internal_cover(states: States, setpoints: Setpoints):
     sigma = Coefficients.Outside.sigma
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
-    rho_CovFIR = double_layer_cover_reflection_coefficient(tau_ShScr_ShScrPerFIR, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
+    rho_CovFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - tau_CovFIR - rho_CovFIR  # = a_CovFIR, line 271 / setGlAux
     floor_t = states.floor_t
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
@@ -303,15 +291,9 @@ def FIR_from_floor_to_sky(states: States, setpoints: Setpoints, weather: Weather
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient,
-                                                                        shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient,
-                                                                      shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR,
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient,
                                                              roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
 
     F_FlrSky = tau_CovFIR * tau_U_ThScrFIR * (1 - 0.49 * math.pi * pipe_length * phi_external_pipe) * math.exp(-canopy_FIR_extinction_coefficient * states.LAI)
@@ -351,14 +333,10 @@ def FIR_from_thermal_screen_to_internal_cover(states: States, setpoints: Setpoin
     A_ThScr = 1
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
-    rho_CovFIR = double_layer_cover_reflection_coefficient(tau_ShScr_ShScrPerFIR, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
+    rho_CovFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - tau_CovFIR - rho_CovFIR  # = a_CovFIR, line 271 / setGlAux
     thScr_FIR_emission_coefficient = Coefficients.Greenhouse.Thermalscreen.thScr_FIR_emission_coefficient
     sigma = Coefficients.Outside.sigma
@@ -374,13 +352,9 @@ def FIR_from_thermal_screen_to_sky(states: States, setpoints: Setpoints, weather
     thScr_FIR_emission_coefficient = Coefficients.Greenhouse.Thermalscreen.thScr_FIR_emission_coefficient
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
     sigma = Coefficients.Outside.sigma
     F_ThScrSky = tau_CovFIR * setpoints.U_ThScr
     thermal_screen_t = states.thermal_screen_t
@@ -395,14 +369,10 @@ def FIR_from_heating_pipe_to_internal_cover(states: States, setpoints: Setpoints
     phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
-    rho_CovFIR = double_layer_cover_reflection_coefficient(tau_ShScr_ShScrPerFIR, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
+    rho_CovFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - tau_CovFIR - rho_CovFIR  # = a_CovFIR, line 271 / setGlAux
     A_Pipe = math.pi * pipe_length * phi_external_pipe
     pipe_FIR_emission_coefficient = Coefficients.Greenhouse.Heating.pipe_FIR_emission_coefficient
@@ -458,14 +428,10 @@ def FIR_from_external_cover_to_sky(states: States, weather: Weather):
     A_Cov_e = 1
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
-    rho_CovFIR = double_layer_cover_reflection_coefficient(tau_ShScr_ShScrPerFIR, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
+    rho_CovFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - tau_CovFIR - rho_CovFIR  # = a_CovFIR, line 271 / setGlAux
     sky_FIR_emission_coefficient = Coefficients.Outside.sky_FIR_emission_coefficient
     F_Cov_e_Sky = 1
@@ -484,13 +450,9 @@ def FIR_from_heating_pipe_to_sky(states: States, setpoints: Setpoints, weather: 
     sky_FIR_emission_coefficient = Coefficients.Outside.sky_FIR_emission_coefficient
     shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    shScrPer_FIR_transmission_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_transmission_coefficient
-    shScrPer_FIR_reflection_coefficient = Coefficients.Greenhouse.Whitewash.shScrPer_FIR_reflection_coefficient
-    tau_ShScr_ShScrPerFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, shScrPer_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 103 / setGlAux / GreenLight
-    rho_ShScr_ShScrPerFIR = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, shScrPer_FIR_reflection_coefficient)  # line 107, 111 / setGlAux / GreenLight
     roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
     roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
-    tau_CovFIR = double_layer_cover_transmission_coefficient(tau_ShScr_ShScrPerFIR, roof_FIR_transmission_coefficient, rho_ShScr_ShScrPerFIR, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
+    tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
 
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
     F_PipeSky = tau_CovFIR * tau_U_ThScrFIR * 0.49 * math.exp(-canopy_FIR_extinction_coefficient * states.LAI)

@@ -93,19 +93,6 @@ class Coefficients(object):
             c_p_Rf = 0.84E3  # The specific heat capacity of the roof layer
             roof_thickness = 4E-3  # Thickness of the roof layer
 
-        class Whitewash:
-            shScrPer_FIR_emission_coefficient = 0.9  # FIR emission coefficient of the whitewash
-            shScrPer_density = 1E3  # Density of the semi permanent shading screen
-            shScrPer_NIR_reflection_coefficient = 0.3  # NIR reflection coefficient of the whitewash
-            shScrPer_PAR_reflection_coefficient = 0.3  # PAR reflection coefficient of the whitewash
-            shScrPer_FIR_reflection_coefficient = 0  # FIR reflection coefficient of the whitewash
-            shScrPer_NIR_transmission_coefficient = 0.6  # NIR transmission coefficient of the whitewash
-            shScrPer_PAR_transmission_coefficient = 0.6  # PAR transmission coefficient of the whitewash
-            shScrPer_FIR_transmission_coefficient = 0.1  # FIR transmission coefficient of the whitewash
-            shScrPer_heat_conductivity = inf  # Thermal heat conductivity of the whitewash
-            c_p_ShScrPer = 4.18E3  # Specific heat capacity of the whitewash
-            shScrPer_thickness = 0.2E-3  # Thickness of the whitewash
-
         class Shadowscreen:
             # No shadowscreen
             shScr_NIR_reflection_coefficient = 0

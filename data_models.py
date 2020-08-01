@@ -13,7 +13,6 @@ class Setpoints(NamedTuple):
     U_VentForced: float
     U_ExtCO2: float
     U_ShScr: float
-    U_ShScrPer: float
     U_ThScr: float
     U_Ind: float
     U_Geo: float
