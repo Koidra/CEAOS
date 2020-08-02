@@ -3,7 +3,7 @@ CEAOS is a dynamic simulator for greenhouses and vertical farms. With this simul
 
 ## Concepts  
 ### Climate Model  
-This model estimates the indoor climate based on the outdoor climate, the greenhouse design and the growth of crop (from crop model). For example, these indoor attributes will be estimated by this model: temperature, vapour pressure, CO2,... The estimated indoor climate will be used as the input for the crop model.  
+This model estimates the indoor climate based on the outdoor climate, the greenhouse design and the growth of crop (from crop model). For example, these indoor attributes will be estimated by this model: temperature, vapor pressure, CO2,... The estimated indoor climate will be used as the input for the crop model.  
 
 ### Crop Model  
 This model describes the effects of indoor climate and greenhouse design on the crop. In other words, this model describes crop as a function of indoor climate.  

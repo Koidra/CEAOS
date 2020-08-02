@@ -1,10 +1,10 @@
 import numpy as np
-from gym import Env
+
 from climate_model import IndoorClimateModel
 from crop_model import CropModel
 
 
-class CEASim(Env):
+class CEASim():
 
     def __init__(self, climate_model: IndoorClimateModel, crop_model: CropModel):
         self.climate_model = climate_model
