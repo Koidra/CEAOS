@@ -14,6 +14,24 @@ def air_density():
     return density_Air0 * math.exp(gravity * M_Air * elevation_height / (293.15 * M_Gas))
 
 
+def thermal_screen_air_flux_rate(setpoints: Setpoints, states: States, weather: Weather):
+    # Equation 8.41
+    U_ThScr = setpoints.U_ThScr
+    thScr_flux_coefficient = Coefficients.Greenhouse.Thermalscreen.thScr_flux_coefficient
+    air_t = states.air_t
+    outdoor_t = weather.outdoor_t
+    density_air = air_density()
+    M_Gas = Coefficients.Outside.M_Gas
+    M_Air = Coefficients.Outside.M_Air
+    elevation_height = Coefficients.Greenhouse.Construction.elevation_height
+    pressure = 101325 * (1 - 2.5577e-5 * elevation_height) ** 5.25588
+    density_Top = M_Air*pressure/((states.above_thermal_screen_t+273.15) * M_Gas)
+    density_Out = density_Top  # = rho_Top, line 715 / setGlAux / GreenLight
+    density_mean_Air = (density_air + density_Out) / 2
+    gravity = Coefficients.Outside.gravity
+    return U_ThScr * thScr_flux_coefficient * abs(air_t-outdoor_t) ** 0.66 + (1-U_ThScr) * (0.5 * density_mean_Air * (1 - U_ThScr) * gravity * abs(density_air - density_Out)) ** 0.5 / density_mean_Air
+
+
 def mechanical_cooling_to_greenhouse_air_heat_exchange_coefficient(setpoints: Setpoints, states: States):
     # Equation 8.63
     U_MechCool = setpoints.U_MechCool

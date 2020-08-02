@@ -1,8 +1,8 @@
 from coefficients import Coefficients
 from data_models import States, Setpoints, Weather
-from equations.utils import total_side_vents_ventilation_rates, total_roof_ventilation_rates
-from equations.heat_fluxes import sensible_heat_flux_between_direct_air_heater_and_greenhouse_air, \
+from equations.utils import total_side_vents_ventilation_rates, total_roof_ventilation_rates, \
     thermal_screen_air_flux_rate
+from equations.heat_fluxes import sensible_heat_flux_between_direct_air_heater_and_greenhouse_air
 
 
 def general_CO2_flux(f_12: float, CO2_1, CO2_2):

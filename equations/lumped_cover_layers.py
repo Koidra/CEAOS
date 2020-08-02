@@ -54,22 +54,6 @@ def absorption_coefficient(t, r):
 # TODO: refactor this
 
 
-def shadingscreen_PAR_transmission_coefficient(setpoints: Setpoints):
-    # Equation 8.16
-    U_ShScr = setpoints.U_ShScr
-    shScr_PAR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
-    shScr_PAR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
-    return (1 - U_ShScr*(1-shScr_PAR_transmission_coefficient)) / (1 - U_ShScr*shScr_PAR_reflection_coefficient)
-
-
-def shadingscreen_PAR_reflection_coefficient(setpoints: Setpoints):
-    # Equation 8.17
-    U_ShScr = setpoints.U_ShScr
-    shScr_PAR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
-    shScr_PAR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
-    return U_ShScr * shScr_PAR_reflection_coefficient + (1 - U_ShScr * (1-shScr_PAR_transmission_coefficient))**2/(1-U_ShScr*shScr_PAR_reflection_coefficient)
-
-
 def roof_thermal_screen_PAR_transmission_coefficient(setpoints: Setpoints):
     # Equation 8.16
     U_Roof = setpoints.U_Roof

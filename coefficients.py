@@ -1,6 +1,7 @@
 from math import inf
 
 """
+These constants and coefficients are imported from Table 8.1 in Vanthoor's thesis and from GreenLight code
 NOTE: In the GreenLight model, there are no whitewash and shadow screen
 """
 
@@ -114,11 +115,6 @@ class Coefficients(object):
             c_pThScr = 1.8E3  # Specific heat capacity of the thermal screen
             thScr_thickness = 0.35E-3  # Thickness of the thermal screen
             thScr_flux_coefficient = 0.25E-3  # The thermal screen flux coefficient
-
-        # TODO: What is the differences between Shadowscreen and Blackoutscreen
-        class Blackoutscreen:
-            blScr_PAR_transmission_coefficient = 0.01
-            blScr_PAR_reflection_coefficient = 0.35
 
         class Floor:
             floor_FIR_emission_coefficient = 1  # FIR emission coefficient of the floor

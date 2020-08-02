@@ -16,14 +16,8 @@ The state variables of the model are all described by differential equations.
 """
 from equations.CO2_fluxes import *
 from equations.capacities import *
-from equations.heat_fluxes import *
-from equations.lumped_cover_layers import lumped_cover_heat_capacity
 from equations.radiation_fluxes import *
-from equations.vapor_fluxes import canopy_transpiration, fogging_system_to_greenhouse_air_latent_vapor_flux, \
-    heat_blower_to_greenhouse_air_vapor_flux, greenhouse_air_to_thermal_screen_vapor_flux, \
-    greenhouse_air_to_above_thermal_screen_vapor_flux, greenhouse_air_to_outdoor_vapor_flux, \
-    greenhouse_air_to_mechanical_cooling_vapor_flux, \
-    above_thermal_screen_to_internal_cover_vapor_flux, above_thermal_screen_to_outdoor_vapor_flux
+from equations.vapor_fluxes import *
 
 
 def canopy_temperature(setpoints: Setpoints, states: States, weather: Weather):

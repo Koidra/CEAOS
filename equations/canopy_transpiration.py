@@ -1,14 +1,17 @@
-import math
-
-from coefficients import Coefficients
-from data_models import States, Setpoints, Weather
-from equations.lumped_cover_layers import shadingscreen_PAR_transmission_coefficient, \
-    shadingscreen_PAR_reflection_coefficient, roof_thermal_screen_PAR_transmission_coefficient, \
-    roof_thermal_screen_PAR_reflection_coefficient, double_layer_cover_transmission_coefficient, \
-    shadingscreen_NIR_transmission_coefficient, \
-    shadingscreen_NIR_reflection_coefficient, roof_thermal_screen_NIR_transmission_coefficient, \
-    roof_thermal_screen_NIR_reflection_coefficient
+from data_models import States, Weather
+from equations.lumped_cover_layers import *
 from equations.utils import air_density, saturation_vapor_pressure
+
+
+def canopy_transpiration(states: States, setpoints: Setpoints, weather: Weather) -> float:
+    """The canopy transpiration
+    Equation 8.47
+    :return: The canopy transpiration [kg m^-2 s^-1]
+    """
+    VEC_CanAir = canopy_transpiration_vapor_transfer_coefficient(states, setpoints, weather)
+    canopy_vapor_pressure = saturation_vapor_pressure(states.can_t)
+    air_vapor_pressure = saturation_vapor_pressure(states.air_t)
+    return VEC_CanAir * (canopy_vapor_pressure - air_vapor_pressure)
 
 
 def canopy_transpiration_vapor_transfer_coefficient(states: States, setpoints: Setpoints, weather: Weather) -> float:
@@ -45,49 +48,35 @@ def resistance_factor(states: States, setpoints: Setpoints, weather: Weather, ty
         ratio_GlobAir = Coefficients.Greenhouse.Construction.ratio_GlobAir
         ratio_GlobPAR = Coefficients.Outside.ratio_GlobPAR
         ratio_GlobNIR = Coefficients.Outside.ratio_GlobNIR
-        eta_LampPAR = Coefficients.Greenhouse.Lamp.eta_LampPAR
-        eta_LampNIR = Coefficients.Greenhouse.Lamp.eta_LampNIR
-        qLampIn = Coefficients.Greenhouse.Lamp.thetaLampMax * setpoints.U_Lamp  # line 308 / setGlAux / GreenLight
-        eta_IntLampPAR = Coefficients.Greenhouse.Interlight.eta_IntLampPAR
-        eta_IntLampNIR = Coefficients.Greenhouse.Interlight.eta_IntLampNIR
-        qIntLampIn = Coefficients.Greenhouse.Interlight.thetaIntLampMax * setpoints.U_IntLamp
         # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-        # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-        tau_ShSrc_ShSrcPerPAR = shadingscreen_PAR_transmission_coefficient(setpoints)
-        # PAR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-        rho_ShSrc_ShSrcPerPAR = shadingscreen_PAR_reflection_coefficient(setpoints)
+        shScr_PAR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
+        shScr_PAR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
 
         # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-        tau_roof_ThSrcPAR = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
+        roof_thScr_PAR_transmission_coefficient = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
         # PAR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-        rho_roof_ThSrcPAR = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
+        roof_thScr_PAR_reflection_coefficient = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
 
         # Vanthoor PAR transmission coefficient of the lumped cover
-        cover_PAR_transmission_coefficient = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerPAR, tau_roof_ThSrcPAR,
-                                                                                         rho_ShSrc_ShSrcPerPAR, rho_roof_ThSrcPAR)
+        cover_PAR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_PAR_transmission_coefficient, roof_thScr_PAR_transmission_coefficient,
+                                                                                         shScr_PAR_reflection_coefficient, roof_thScr_PAR_reflection_coefficient)
+
+        shScr_NIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
+        shScr_NIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
 
         # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-        tau_ShSrc_ShSrcPerNIR = shadingscreen_NIR_transmission_coefficient(setpoints)
+        roof_thScr_NIR_transmission_coefficient = roof_thermal_screen_NIR_transmission_coefficient(setpoints)
         # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-        rho_ShSrc_ShSrcPerNIR = shadingscreen_NIR_reflection_coefficient(setpoints)
-
-        # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-        tau_roof_ThSrcNIR = roof_thermal_screen_NIR_transmission_coefficient(setpoints)
-        # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-        rho_roof_ThSrcNIR = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
+        roof_thScr_NIR_reflection_coefficient = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
 
         # Vanthoor NIR transmission coefficient of the lumped cover
-        tau_CovNIR = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerNIR, tau_roof_ThSrcNIR,
-                                                                 rho_ShSrc_ShSrcPerNIR, rho_roof_ThSrcNIR)
+        cover_NIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_NIR_transmission_coefficient, roof_thScr_NIR_transmission_coefficient,
+                                                                                         shScr_NIR_reflection_coefficient, roof_thScr_NIR_reflection_coefficient)
 
         # Global radiation above the canopy from the sun
-        rCanSun = (1 - ratio_GlobAir) * outdoor_global_rad * (ratio_GlobPAR * cover_PAR_transmission_coefficient + ratio_GlobNIR * tau_CovNIR)
-        # Global radiation above the canopy from the lamps
-        rCanLamp = (eta_LampPAR + eta_LampNIR) * qLampIn
-        # Global radiation to the canopy from the interlight lamps
-        rCanIntLamp = (eta_IntLampPAR + eta_IntLampNIR) * qIntLampIn
+        rCanSun = (1 - ratio_GlobAir) * outdoor_global_rad * (ratio_GlobPAR * cover_PAR_transmission_coefficient + ratio_GlobNIR * cover_NIR_transmission_coefficient)
         # Global radiation above the canopy
-        above_canopy_global_radiation = rCanSun + rCanLamp + rCanIntLamp  # Note: line 338 / setGlAux / GreenLight
+        above_canopy_global_radiation = rCanSun  # Note: line 338 / setGlAux / GreenLight
         return (above_canopy_global_radiation + Coefficients.Outside.c_evap1) / (above_canopy_global_radiation + Coefficients.Outside.c_evap2)
     elif type == 'CO2_Air':
         c_evap3 = smoothed_transpiration_parameters(nth=3, setpoints=setpoints, states=states, weather=weather)
@@ -106,47 +95,33 @@ def differentiable_switch(states: States, setpoints: Setpoints, weather: Weather
     ratio_GlobAir = Coefficients.Greenhouse.Construction.ratio_GlobAir
     ratio_GlobPAR = Coefficients.Outside.ratio_GlobPAR
     ratio_GlobNIR = Coefficients.Outside.ratio_GlobNIR
-    eta_LampPAR = Coefficients.Greenhouse.Lamp.eta_LampPAR
-    eta_LampNIR = Coefficients.Greenhouse.Lamp.eta_LampNIR
-    qLampIn = Coefficients.Greenhouse.Lamp.thetaLampMax * setpoints.U_Lamp  # line 308 / setGlAux / GreenLight
-    eta_IntLampPAR = Coefficients.Greenhouse.Interlight.eta_IntLampPAR
-    eta_IntLampNIR = Coefficients.Greenhouse.Interlight.eta_IntLampNIR
-    qIntLampIn = Coefficients.Greenhouse.Interlight.thetaIntLampMax * setpoints.U_IntLamp
     # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-    # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    tau_ShSrc_ShSrcPerPAR = shadingscreen_PAR_transmission_coefficient(setpoints)
-    # PAR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    rho_ShSrc_ShSrcPerPAR = shadingscreen_PAR_reflection_coefficient(setpoints)
+    shScr_PAR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
+    shScr_PAR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
 
     # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    tau_roof_ThSrcPAR = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
+    roof_thScr_PAR_transmission_coefficient = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
     # PAR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    rho_roof_ThSrcPAR = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
+    roof_thScr_PAR_reflection_coefficient = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
 
     # Vanthoor PAR transmission coefficient of the lumped cover
-    cover_PAR_transmission_coefficient = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerPAR, tau_roof_ThSrcPAR, rho_ShSrc_ShSrcPerPAR, rho_roof_ThSrcPAR)
+    cover_PAR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_PAR_transmission_coefficient, roof_thScr_PAR_transmission_coefficient, shScr_PAR_reflection_coefficient, roof_thScr_PAR_reflection_coefficient)
+
+    shScr_NIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
+    shScr_NIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
 
     # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    tau_ShSrc_ShSrcPerNIR = shadingscreen_NIR_transmission_coefficient(setpoints)
+    roof_thScr_NIR_transmission_coefficient = roof_thermal_screen_NIR_transmission_coefficient(setpoints)
     # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    rho_ShSrc_ShSrcPerNIR = shadingscreen_NIR_reflection_coefficient(setpoints)
-
-    # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    tau_roof_ThSrcNIR = roof_thermal_screen_NIR_transmission_coefficient(setpoints)
-    # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    rho_roof_ThSrcNIR = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
+    roof_thScr_NIR_reflection_coefficient = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
 
     # Vanthoor NIR transmission coefficient of the lumped cover
-    tau_CovNIR = double_layer_cover_transmission_coefficient(tau_ShSrc_ShSrcPerNIR, tau_roof_ThSrcNIR, rho_ShSrc_ShSrcPerNIR, rho_roof_ThSrcNIR)
+    cover_NIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_NIR_transmission_coefficient, roof_thScr_NIR_transmission_coefficient, shScr_NIR_reflection_coefficient, roof_thScr_NIR_reflection_coefficient)
 
     # Global radiation above the canopy from the sun
-    rCanSun = (1 - ratio_GlobAir) * outdoor_global_rad * (ratio_GlobPAR * cover_PAR_transmission_coefficient + ratio_GlobNIR * tau_CovNIR)
-    # Global radiation above the canopy from the lamps
-    rCanLamp = (eta_LampPAR + eta_LampNIR) * qLampIn
-    # Global radiation to the canopy from the interlight lamps
-    rCanIntLamp = (eta_IntLampPAR + eta_IntLampNIR) * qIntLampIn
+    rCanSun = (1 - ratio_GlobAir) * outdoor_global_rad * (ratio_GlobPAR * cover_PAR_transmission_coefficient + ratio_GlobNIR * cover_NIR_transmission_coefficient)
     # Global radiation above the canopy
-    above_canopy_global_radiation = rCanSun + rCanLamp + rCanIntLamp  # Note: line 338 / setGlAux / GreenLight
+    above_canopy_global_radiation = rCanSun  # Note: line 338 / setGlAux / GreenLight
     return 1 / (1 + math.exp(Coefficients.Outside.s_r_s(above_canopy_global_radiation - Coefficients.Outside.rad_canopy_setpoint)))
 
 

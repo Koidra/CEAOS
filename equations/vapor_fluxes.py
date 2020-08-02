@@ -1,13 +1,5 @@
-import math
-
-from coefficients import Coefficients
-from data_models import Setpoints, States, Weather
-from equations.canopy_transpiration import canopy_transpiration_vapor_transfer_coefficient
-from equations.utils import total_side_vents_ventilation_rates, \
-    mechanical_cooling_to_greenhouse_air_heat_exchange_coefficient, total_roof_ventilation_rates, \
-    saturation_vapor_pressure
-from equations.heat_fluxes import sensible_heat_flux_between_direct_air_heater_and_greenhouse_air, \
-    thermal_screen_air_flux_rate
+from equations.heat_fluxes import sensible_heat_flux_between_direct_air_heater_and_greenhouse_air
+from equations.utils import *
 
 
 def air_to_obj_vapor_flux(VP_1: float, VP_2: float, HEC: float):
@@ -25,17 +17,6 @@ def general_vapor_flux(f_12: float, VP_1: float, VP_2: float, object_1_t: float,
     M_Water = Coefficients.Outside.M_Water
     M_Gas = Coefficients.Outside.M_Gas
     return M_Water * f_12 * (VP_1 / (object_1_t + 273.15) + VP_2 / (object_2_t + 273.15)) / M_Gas
-
-
-def canopy_transpiration(states: States, setpoints: Setpoints, weather: Weather) -> float:
-    """The canopy transpiration
-    Equation 8.47
-    :return: The canopy transpiration [kg m^-2 s^-1]
-    """
-    VEC_CanAir = canopy_transpiration_vapor_transfer_coefficient(states, setpoints, weather)
-    canopy_vapor_pressure = saturation_vapor_pressure(states.can_t)
-    air_vapor_pressure = saturation_vapor_pressure(states.air_t)
-    return VEC_CanAir * (canopy_vapor_pressure - air_vapor_pressure)
 
 
 def fogging_system_to_greenhouse_air_latent_vapor_flux(setpoints: Setpoints):
@@ -58,8 +39,8 @@ def greenhouse_air_to_thermal_screen_vapor_flux(setpoints: Setpoints, states: St
     thermal_screen_t = states.thermal_screen_t
     HEC_AirThScr = 1.7 * setpoints.U_ThScr * abs(air_t - thermal_screen_t) ** 0.33
     air_vapor_pressure = saturation_vapor_pressure(air_t)
-    VP_ThScr = saturation_vapor_pressure(thermal_screen_t)
-    return air_to_obj_vapor_flux(air_vapor_pressure, VP_ThScr, HEC_AirThScr)
+    thScr_vapor_pressure = saturation_vapor_pressure(thermal_screen_t)
+    return air_to_obj_vapor_flux(air_vapor_pressure, thScr_vapor_pressure, HEC_AirThScr)
 
 
 def greenhouse_air_to_above_thermal_screen_vapor_flux(states: States, setpoints: Setpoints, weather: Weather):
