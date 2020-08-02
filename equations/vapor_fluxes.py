@@ -14,22 +14,22 @@ def differentiable_air_to_obj_vapor_flux(s_MV12: float, VP_1: float, VP_2: float
 
 def general_vapor_flux(f_12: float, VP_1: float, VP_2: float, object_1_t: float, object_2_t: float):
     # Equation 8.45
-    M_Water = Coefficients.Outside.M_Water
-    M_Gas = Coefficients.Outside.M_Gas
+    M_Water = Constants.M_Water
+    M_Gas = Constants.M_Gas
     return M_Water * f_12 * (VP_1 / (object_1_t + 273.15) + VP_2 / (object_2_t + 273.15)) / M_Gas
 
 
 def fogging_system_to_greenhouse_air_latent_vapor_flux(setpoints: Setpoints):
     # Equation 8.64
     U_Fog = setpoints.U_Fog
-    cap_Fog = Coefficients.Greenhouse.ActiveClimateControl.cap_Fog
-    floor_area = Coefficients.Greenhouse.Construction.floor_area
+    cap_Fog = Coefficients.ActiveClimateControl.cap_Fog
+    floor_area = Coefficients.Construction.floor_area
     return U_Fog * cap_Fog / floor_area
 
 
 def heat_blower_to_greenhouse_air_vapor_flux(setpoints: Setpoints):
     # Equation 8.55
-    eta_HeatVap = Coefficients.Outside.eta_HeatVap
+    eta_HeatVap = Constants.eta_HeatVap
     sensible_heat_flux_BlowAir = sensible_heat_flux_between_direct_air_heater_and_greenhouse_air(setpoints)
     return eta_HeatVap * sensible_heat_flux_BlowAir
 
@@ -74,9 +74,9 @@ def greenhouse_air_to_mechanical_cooling_vapor_flux(states: States, setpoints: S
 def above_thermal_screen_to_internal_cover_vapor_flux(states: States):
     above_thermal_screen_t = states.above_thermal_screen_t
     internal_cov_t = states.internal_cov_t
-    c_HECin = Coefficients.Greenhouse.Construction.c_HECin
-    cover_area = Coefficients.Greenhouse.Construction.cover_area
-    floor_area = Coefficients.Greenhouse.Construction.floor_area
+    c_HECin = Coefficients.Construction.c_HECin
+    cover_area = Coefficients.Construction.cover_area
+    floor_area = Coefficients.Construction.floor_area
     HEC_TopCov_in = c_HECin * (above_thermal_screen_t - internal_cov_t) ** 0.33 * cover_area / floor_area
     above_thermal_screen_vapor_pressure = saturation_vapor_pressure(above_thermal_screen_t)
     cov_in_vapor_pressure = saturation_vapor_pressure(internal_cov_t)

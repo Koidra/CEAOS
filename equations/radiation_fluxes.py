@@ -19,26 +19,26 @@ def canopy_PAR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
 def canopy_PAR_absorbed_from_greenhouse_cover(states: States, setpoints: Setpoints, weather: Weather):
     # Equation 8.27
     radiation_flux_PARGh = PAR_above_canopy(states, setpoints, weather)
-    canopy_PAR_reflection_coefficient = Coefficients.Outside.canopy_PAR_reflection_coefficient
-    canopy_PAR_extinction_coefficient = Coefficients.Outside.canopy_PAR_extinction_coefficient
+    canopy_PAR_reflection_coefficient = Constants.canopy_PAR_reflection_coefficient
+    canopy_PAR_extinction_coefficient = Constants.canopy_PAR_extinction_coefficient
     return radiation_flux_PARGh * (1 - canopy_PAR_reflection_coefficient) * (1 - math.exp(-canopy_PAR_extinction_coefficient * states.leaf_area_index))
 
 
 def canopy_PAR_absorbed_from_greenhouse_floor(states: States, setpoints: Setpoints, weather: Weather):
     # Equation 8.29
     radiation_flux_PARGh = PAR_above_canopy(states, setpoints, weather)
-    canopy_PAR_extinction_coefficient = Coefficients.Outside.canopy_PAR_extinction_coefficient
-    floor_PAR_extinction_coefficient = Coefficients.Outside.floor_PAR_extinction_coefficient
-    floor_PAR_reflection_coefficient = Coefficients.Greenhouse.Floor.floor_PAR_reflection_coefficient
-    canopy_PAR_reflection_coefficient = Coefficients.Outside.canopy_PAR_reflection_coefficient
+    canopy_PAR_extinction_coefficient = Constants.canopy_PAR_extinction_coefficient
+    floor_PAR_extinction_coefficient = Constants.floor_PAR_extinction_coefficient
+    floor_PAR_reflection_coefficient = Coefficients.Floor.floor_PAR_reflection_coefficient
+    canopy_PAR_reflection_coefficient = Constants.canopy_PAR_reflection_coefficient
     return radiation_flux_PARGh * (1 - math.exp(-canopy_PAR_extinction_coefficient * states.leaf_area_index)) * floor_PAR_reflection_coefficient * (1 - canopy_PAR_reflection_coefficient) * (1 - math.exp(-floor_PAR_extinction_coefficient * states.leaf_area_index))
 
 
 def floor_NIR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
     # Equation 8.34
     # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-    shScr_NIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
-    shScr_NIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
+    shScr_NIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
+    shScr_NIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
 
     # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
     roof_thScr_NIR_reflection_coefficient = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
@@ -46,7 +46,7 @@ def floor_NIR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
     # Vanthoor NIR reflection coefficient of the lumped cover
     cover_NIR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_NIR_transmission_coefficient, shScr_NIR_reflection_coefficient, roof_thScr_NIR_reflection_coefficient)
     virtual_NIR_reflection_canopy_coef = canopy_virtual_NIR_reflection_coefficient(states)
-    floor_NIR_reflection_coefficient = Coefficients.Greenhouse.Floor.floor_NIR_reflection_coefficient
+    floor_NIR_reflection_coefficient = Coefficients.Floor.floor_NIR_reflection_coefficient
 
     virtual_NIR_transmission_cover_coef = lumped_cover_virtual_NIR_transmission_coefficients(cover_NIR_reflection_coefficient)
     virtual_NIR_transmission_canopy_coef = canopy_virtual_NIR_transmission_coefficient(states)
@@ -62,16 +62,16 @@ def floor_NIR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
 
     # NIR absorption coefficient of the floor
     NIR_absorption_floor_coef = cover_can_floor_NIR_transmission_coefficient  # page 213
-    ratio_GlobAir = Coefficients.Greenhouse.Construction.ratio_GlobAir
-    ratio_GlobNIR = Coefficients.Outside.ratio_GlobNIR
+    ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
+    ratio_GlobNIR = Constants.ratio_GlobNIR
     outdoor_global_rad = weather.outdoor_global_rad
     return (1 - ratio_GlobAir) * NIR_absorption_floor_coef * ratio_GlobNIR * outdoor_global_rad
 
 
 def floor_PAR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
     # Equation 8.35
-    floor_PAR_reflection_coefficient = Coefficients.Greenhouse.Floor.floor_PAR_reflection_coefficient
-    canopy_PAR_extinction_coefficient = Coefficients.Outside.canopy_PAR_extinction_coefficient
+    floor_PAR_reflection_coefficient = Coefficients.Floor.floor_PAR_reflection_coefficient
+    canopy_PAR_extinction_coefficient = Constants.canopy_PAR_extinction_coefficient
     radiation_flux_PARGh = PAR_above_canopy(states, setpoints, weather)
     return (1 - floor_PAR_reflection_coefficient) * math.exp(-canopy_PAR_extinction_coefficient * states.leaf_area_index) * radiation_flux_PARGh
 
@@ -89,8 +89,8 @@ def PAR_above_canopy(states: States, setpoints: Setpoints, weather: Weather):
     :return: the PAR above the canopy [W m^-2]
     """
     # TODO: need to re-verify the order of four cover layers
-    shScr_PAR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
-    shScr_PAR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
+    shScr_PAR_transmission_coefficient = Coefficients.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
+    shScr_PAR_reflection_coefficient = Coefficients.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
 
     # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
     roof_thScr_PAR_transmission_coefficient = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
@@ -99,8 +99,8 @@ def PAR_above_canopy(states: States, setpoints: Setpoints, weather: Weather):
 
     # Vanthoor PAR transmission coefficient of the lumped cover
     cover_PAR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_PAR_transmission_coefficient, roof_thScr_PAR_transmission_coefficient, shScr_PAR_reflection_coefficient, roof_thScr_PAR_reflection_coefficient)
-    ratio_GlobAir = Coefficients.Greenhouse.Construction.ratio_GlobAir
-    ratio_GlobPAR = Coefficients.Outside.ratio_GlobPAR
+    ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
+    ratio_GlobPAR = Constants.ratio_GlobPAR
     outdoor_global_rad = weather.outdoor_global_rad
     return (1 - ratio_GlobAir) * cover_PAR_transmission_coefficient * ratio_GlobPAR * outdoor_global_rad
 
@@ -118,8 +118,8 @@ def canopy_NIR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
     :return: The NIR absorbed by the canopy [W m^-2]
     """
     # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-    shScr_NIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
-    shScr_NIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
+    shScr_NIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
+    shScr_NIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
 
     # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
     roof_thScr_NIR_reflection_coefficient = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
@@ -127,7 +127,7 @@ def canopy_NIR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
     # Vanthoor NIR reflection coefficient of the lumped cover
     cover_NIR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_NIR_transmission_coefficient, shScr_NIR_reflection_coefficient, roof_thScr_NIR_reflection_coefficient)
     virtual_NIR_reflection_canopy_coef = canopy_virtual_NIR_reflection_coefficient(states)
-    floor_NIR_reflection_coefficient = Coefficients.Greenhouse.Floor.floor_NIR_reflection_coefficient
+    floor_NIR_reflection_coefficient = Coefficients.Floor.floor_NIR_reflection_coefficient
 
     virtual_NIR_transmission_cover_coef = lumped_cover_virtual_NIR_transmission_coefficients(cover_NIR_reflection_coefficient)
     virtual_NIR_transmission_canopy_coef = canopy_virtual_NIR_transmission_coefficient(states)
@@ -145,37 +145,37 @@ def canopy_NIR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
 
     # NIR absorption coefficient of the canopy
     NIR_absorption_canopy_coef = 1 - cover_can_floor_NIR_transmission_coefficient - cover_can_floor_NIR_reflection_coefficient  # page 213
-    ratio_GlobAir = Coefficients.Greenhouse.Construction.ratio_GlobAir
-    ratio_GlobNIR = Coefficients.Outside.ratio_GlobNIR
+    ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
+    ratio_GlobNIR = Constants.ratio_GlobNIR
     outdoor_global_rad = weather.outdoor_global_rad
     return (1 - ratio_GlobAir) * NIR_absorption_canopy_coef * ratio_GlobNIR * outdoor_global_rad
 
 
 def FIR_from_pipe_to_canopy(states: States):
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
     A_Pipe = math.pi * pipe_length * phi_external_pipe
-    pipe_FIR_emission_coefficient = Coefficients.Greenhouse.Heating.pipe_FIR_emission_coefficient
-    can_FIR_emission_coefficient = Coefficients.Outside.can_FIR_emission_coefficient
+    pipe_FIR_emission_coefficient = Coefficients.Heating.pipe_FIR_emission_coefficient
+    can_FIR_emission_coefficient = Constants.can_FIR_emission_coefficient
     F_PipeCan = 0.49 * (1 - math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index))
-    sigma = Coefficients.Outside.sigma
+    sigma = Constants.sigma
     pipe_t = states.pipe_t
     can_t = states.can_t
     return net_far_infrared_radiation_fluxes(A_Pipe, pipe_FIR_emission_coefficient, can_FIR_emission_coefficient, F_PipeCan, sigma, pipe_t, can_t)
 
 
 def FIR_from_canopy_to_internal_cover(states: States, setpoints: Setpoints):
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    sigma = Coefficients.Outside.sigma
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    sigma = Constants.sigma
     can_t = states.can_t
     internal_cov_t = states.internal_cov_t
-    can_FIR_emission_coefficient = Coefficients.Outside.can_FIR_emission_coefficient
+    can_FIR_emission_coefficient = Constants.can_FIR_emission_coefficient
     A_Can = 1 - math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index)
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     cover_FIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
     cover_FIR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - cover_FIR_transmission_coefficient - cover_FIR_reflection_coefficient  # = a_CovFIR, line 271 / setGlAux
@@ -185,31 +185,31 @@ def FIR_from_canopy_to_internal_cover(states: States, setpoints: Setpoints):
 
 
 def FIR_from_canopy_to_floor(states: States):
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    sigma = Coefficients.Outside.sigma
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    sigma = Constants.sigma
     can_t = states.can_t
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
-    can_FIR_emission_coefficient = Coefficients.Outside.can_FIR_emission_coefficient
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
+    can_FIR_emission_coefficient = Constants.can_FIR_emission_coefficient
     A_Can = 1 - math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index)
-    floor_FIR_emission_coefficient = Coefficients.Greenhouse.Floor.floor_FIR_emission_coefficient
+    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
     F_CanFlr = 1 - 0.49 * math.pi * pipe_length * phi_external_pipe
     floor_t = states.floor_t
     return net_far_infrared_radiation_fluxes(A_Can, can_FIR_emission_coefficient, floor_FIR_emission_coefficient, F_CanFlr, sigma, can_t, floor_t)
 
 
 def FIR_from_canopy_to_sky(states: States, setpoints: Setpoints, weather: Weather):
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    sky_FIR_emission_coefficient = Coefficients.Outside.sky_FIR_emission_coefficient
-    can_FIR_emission_coefficient = Coefficients.Outside.can_FIR_emission_coefficient
-    sigma = Coefficients.Outside.sigma
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    sky_FIR_emission_coefficient = Constants.sky_FIR_emission_coefficient
+    can_FIR_emission_coefficient = Constants.can_FIR_emission_coefficient
+    sigma = Constants.sigma
     can_t = states.can_t
     A_Can = 1 - math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index)
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     cover_FIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
     F_CanSky = cover_FIR_transmission_coefficient * tau_U_ThScrFIR
     sky_t = weather.sky_t
@@ -217,10 +217,10 @@ def FIR_from_canopy_to_sky(states: States, setpoints: Setpoints, weather: Weathe
 
 
 def FIR_from_canopy_to_thermal_screen(states: States, setpoints: Setpoints):
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    can_FIR_emission_coefficient = Coefficients.Outside.can_FIR_emission_coefficient
-    sigma = Coefficients.Outside.sigma
-    thScr_FIR_emission_coefficient = Coefficients.Greenhouse.Thermalscreen.thScr_FIR_emission_coefficient
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    can_FIR_emission_coefficient = Constants.can_FIR_emission_coefficient
+    sigma = Constants.sigma
+    thScr_FIR_emission_coefficient = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
     F_CanThScr = setpoints.U_ThScr
     can_t = states.can_t
     A_Can = 1 - math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index)
@@ -229,11 +229,11 @@ def FIR_from_canopy_to_thermal_screen(states: States, setpoints: Setpoints):
 
 
 def FIR_from_heating_pipe_to_floor(states: States):
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
-    floor_FIR_emission_coefficient = Coefficients.Greenhouse.Floor.floor_FIR_emission_coefficient
-    pipe_FIR_emission_coefficient = Coefficients.Greenhouse.Heating.pipe_FIR_emission_coefficient
-    sigma = Coefficients.Outside.sigma
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
+    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
+    pipe_FIR_emission_coefficient = Coefficients.Heating.pipe_FIR_emission_coefficient
+    sigma = Constants.sigma
     pipe_t = states.pipe_t
     floor_t = states.floor_t
     A_Pipe = math.pi * pipe_length * phi_external_pipe
@@ -243,15 +243,15 @@ def FIR_from_heating_pipe_to_floor(states: States):
 
 def FIR_from_floor_to_internal_cover(states: States, setpoints: Setpoints):
     A_Flr = 1
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
-    floor_FIR_emission_coefficient = Coefficients.Greenhouse.Floor.floor_FIR_emission_coefficient
-    sigma = Coefficients.Outside.sigma
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
+    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
+    sigma = Constants.sigma
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     cover_FIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
     cover_FIR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - cover_FIR_transmission_coefficient - cover_FIR_reflection_coefficient  # = a_CovFIR, line 271 / setGlAux
@@ -264,18 +264,18 @@ def FIR_from_floor_to_internal_cover(states: States, setpoints: Setpoints):
 
 def FIR_from_floor_to_sky(states: States, setpoints: Setpoints, weather: Weather):
     A_Flr = 1
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
-    sky_FIR_emission_coefficient = Coefficients.Outside.sky_FIR_emission_coefficient
-    floor_FIR_emission_coefficient = Coefficients.Greenhouse.Floor.floor_FIR_emission_coefficient
-    sigma = Coefficients.Outside.sigma
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
+    sky_FIR_emission_coefficient = Constants.sky_FIR_emission_coefficient
+    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
+    sigma = Constants.sigma
     floor_t = states.floor_t
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     tau_CovFIR = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient,
                                                              roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
 
@@ -286,12 +286,12 @@ def FIR_from_floor_to_sky(states: States, setpoints: Setpoints, weather: Weather
 
 def FIR_from_floor_to_thermal_screen(states: States, setpoints: Setpoints):
     A_Flr = 1
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
-    floor_FIR_emission_coefficient = Coefficients.Greenhouse.Floor.floor_FIR_emission_coefficient
-    thScr_FIR_emission_coefficient = Coefficients.Greenhouse.Thermalscreen.thScr_FIR_emission_coefficient
-    sigma = Coefficients.Outside.sigma
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
+    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
+    thScr_FIR_emission_coefficient = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
+    sigma = Constants.sigma
     floor_t = states.floor_t
     F_FlrThScr = setpoints.U_ThScr * (1 - 0.49 * math.pi * pipe_length * phi_external_pipe) * math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index)
     thermal_screen_t = states.thermal_screen_t
@@ -299,13 +299,13 @@ def FIR_from_floor_to_thermal_screen(states: States, setpoints: Setpoints):
 
 
 def FIR_from_heating_pipe_to_thermal_screen(states: States, setpoints: Setpoints):
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
     A_Pipe = math.pi * pipe_length * phi_external_pipe
-    pipe_FIR_emission_coefficient = Coefficients.Greenhouse.Heating.pipe_FIR_emission_coefficient
-    thScr_FIR_emission_coefficient = Coefficients.Greenhouse.Thermalscreen.thScr_FIR_emission_coefficient
-    sigma = Coefficients.Outside.sigma
+    pipe_FIR_emission_coefficient = Coefficients.Heating.pipe_FIR_emission_coefficient
+    thScr_FIR_emission_coefficient = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
+    sigma = Constants.sigma
     F_PipeThScr = setpoints.U_ThScr * 0.49 * math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index)
     pipe_t = states.pipe_t
     thermal_screen_t = states.thermal_screen_t
@@ -314,15 +314,15 @@ def FIR_from_heating_pipe_to_thermal_screen(states: States, setpoints: Setpoints
 
 def FIR_from_thermal_screen_to_internal_cover(states: States, setpoints: Setpoints):
     A_ThScr = 1
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     cover_FIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
     cover_FIR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - cover_FIR_transmission_coefficient - cover_FIR_reflection_coefficient  # = a_CovFIR, line 271 / setGlAux
-    thScr_FIR_emission_coefficient = Coefficients.Greenhouse.Thermalscreen.thScr_FIR_emission_coefficient
-    sigma = Coefficients.Outside.sigma
+    thScr_FIR_emission_coefficient = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
+    sigma = Constants.sigma
     F_ThScrCov_in = setpoints.U_ThScr
     thermal_screen_t = states.thermal_screen_t
     internal_cov_t = states.internal_cov_t
@@ -331,14 +331,14 @@ def FIR_from_thermal_screen_to_internal_cover(states: States, setpoints: Setpoin
 
 def FIR_from_thermal_screen_to_sky(states: States, setpoints: Setpoints, weather: Weather):
     A_ThScr = 1
-    sky_FIR_emission_coefficient = Coefficients.Outside.sky_FIR_emission_coefficient
-    thScr_FIR_emission_coefficient = Coefficients.Greenhouse.Thermalscreen.thScr_FIR_emission_coefficient
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    sky_FIR_emission_coefficient = Constants.sky_FIR_emission_coefficient
+    thScr_FIR_emission_coefficient = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     cover_FIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
-    sigma = Coefficients.Outside.sigma
+    sigma = Constants.sigma
     F_ThScrSky = cover_FIR_transmission_coefficient * setpoints.U_ThScr
     thermal_screen_t = states.thermal_screen_t
     sky_t = weather.sky_t
@@ -346,19 +346,19 @@ def FIR_from_thermal_screen_to_sky(states: States, setpoints: Setpoints, weather
 
 
 def FIR_from_heating_pipe_to_internal_cover(states: States, setpoints: Setpoints):
-    sigma = Coefficients.Outside.sigma
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    sigma = Constants.sigma
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     cover_FIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
     cover_FIR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - cover_FIR_transmission_coefficient - cover_FIR_reflection_coefficient  # = a_CovFIR, line 271 / setGlAux
     A_Pipe = math.pi * pipe_length * phi_external_pipe
-    pipe_FIR_emission_coefficient = Coefficients.Greenhouse.Heating.pipe_FIR_emission_coefficient
+    pipe_FIR_emission_coefficient = Coefficients.Heating.pipe_FIR_emission_coefficient
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
     F_PipeCov_in = tau_U_ThScrFIR * 0.49 * math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index)
     pipe_t = states.pipe_t
@@ -369,8 +369,8 @@ def FIR_from_heating_pipe_to_internal_cover(states: States, setpoints: Setpoints
 def cover_global_radiation(states: States, setpoints: Setpoints, weather: Weather):
     # Equation 8.37
     # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-    shScr_PAR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
-    shScr_PAR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
+    shScr_PAR_transmission_coefficient = Coefficients.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
+    shScr_PAR_reflection_coefficient = Coefficients.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
 
     # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
     roof_thScr_PAR_transmission_coefficient = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
@@ -382,8 +382,8 @@ def cover_global_radiation(states: States, setpoints: Setpoints, weather: Weathe
     # Vanthoor PAR reflection coefficient of the lumped cover
     cover_PAR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_PAR_transmission_coefficient, shScr_PAR_reflection_coefficient, roof_thScr_PAR_reflection_coefficient)
 
-    shScr_NIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
-    shScr_NIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
+    shScr_NIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
+    shScr_NIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
 
     # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
     roof_thScr_NIR_transmission_coefficient = roof_thermal_screen_NIR_transmission_coefficient(setpoints)
@@ -397,45 +397,45 @@ def cover_global_radiation(states: States, setpoints: Setpoints, weather: Weathe
 
     PAR_absorption_cover_coef = absorption_coefficient(cover_PAR_transmission_coefficient, cover_PAR_reflection_coefficient)
     NIR_absorption_cover_coef = absorption_coefficient(cover_NIR_transmission_coefficient, cover_NIR_reflection_coefficient)
-    ratio_GlobPAR = Coefficients.Outside.ratio_GlobPAR
-    ratio_GlobNIR = Coefficients.Outside.ratio_GlobNIR
+    ratio_GlobPAR = Constants.ratio_GlobPAR
+    ratio_GlobNIR = Constants.ratio_GlobNIR
     outdoor_global_rad = weather.outdoor_global_rad
     return (PAR_absorption_cover_coef * ratio_GlobPAR + NIR_absorption_cover_coef * ratio_GlobNIR) * outdoor_global_rad
 
 
 def FIR_from_external_cover_to_sky(states: States, weather: Weather):
     A_Cov_e = 1
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     cover_FIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
     cover_FIR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - cover_FIR_transmission_coefficient - cover_FIR_reflection_coefficient  # = a_CovFIR, line 271 / setGlAux
-    sky_FIR_emission_coefficient = Coefficients.Outside.sky_FIR_emission_coefficient
+    sky_FIR_emission_coefficient = Constants.sky_FIR_emission_coefficient
     F_Cov_e_Sky = 1
-    sigma = Coefficients.Outside.sigma
+    sigma = Constants.sigma
     external_cov_t = states.external_cov_t
     sky_t = weather.sky_t
     return net_far_infrared_radiation_fluxes(A_Cov_e, epsilon_Cov, sky_FIR_emission_coefficient, F_Cov_e_Sky, sigma, external_cov_t, sky_t)
 
 
 def FIR_from_heating_pipe_to_sky(states: States, setpoints: Setpoints, weather: Weather):
-    pipe_length = Coefficients.Greenhouse.Heating.pipe_length
-    phi_external_pipe = Coefficients.Greenhouse.Heating.phi_external_pipe
-    canopy_FIR_extinction_coefficient = Coefficients.Outside.canopy_FIR_extinction_coefficient
+    pipe_length = Coefficients.Heating.pipe_length
+    phi_external_pipe = Coefficients.Heating.phi_external_pipe
+    canopy_FIR_extinction_coefficient = Constants.canopy_FIR_extinction_coefficient
     A_Pipe = math.pi * pipe_length * phi_external_pipe
-    pipe_FIR_emission_coefficient = Coefficients.Greenhouse.Heating.pipe_FIR_emission_coefficient
-    sky_FIR_emission_coefficient = Coefficients.Outside.sky_FIR_emission_coefficient
-    shScr_FIR_transmission_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_transmission_coefficient
-    shScr_FIR_reflection_coefficient = Coefficients.Greenhouse.Shadowscreen.shScr_FIR_reflection_coefficient
-    roof_FIR_transmission_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_transmission_coefficient
-    roof_FIR_reflection_coefficient = Coefficients.Greenhouse.Roof.roof_FIR_reflection_coefficient
+    pipe_FIR_emission_coefficient = Coefficients.Heating.pipe_FIR_emission_coefficient
+    sky_FIR_emission_coefficient = Constants.sky_FIR_emission_coefficient
+    shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coefficient = Coefficients.Roof.roof_FIR_reflection_coefficient
     cover_FIR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coefficient, roof_FIR_transmission_coefficient, shScr_FIR_reflection_coefficient, roof_FIR_reflection_coefficient)  # line 255 / setGlAux / GreenLight
 
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
     F_PipeSky = cover_FIR_transmission_coefficient * tau_U_ThScrFIR * 0.49 * math.exp(-canopy_FIR_extinction_coefficient * states.leaf_area_index)
-    sigma = Coefficients.Outside.sigma
+    sigma = Constants.sigma
     pipe_t = states.pipe_t
     sky_t = weather.sky_t
     return net_far_infrared_radiation_fluxes(A_Pipe, pipe_FIR_emission_coefficient, sky_FIR_emission_coefficient, F_PipeSky, sigma, pipe_t, sky_t)

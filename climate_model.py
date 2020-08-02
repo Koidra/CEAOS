@@ -2,11 +2,10 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from data_models import Setpoint
+from data_models import Setpoints
 
 
 class IndoorClimateModel(ABC):
-    # TODO: so this is the observation ?
     """ An indoor climate model
     Takes a climate control setpoint vector and returns a climate observation vector as output
     """
@@ -19,7 +18,7 @@ class IndoorClimateModel(ABC):
         pass
 
     @abstractmethod
-    def step(self, crop_obs: np.ndarray, setpoint: Setpoint):
+    def step(self, crop_obs: np.ndarray, setpoint: Setpoints):
         pass
 
 

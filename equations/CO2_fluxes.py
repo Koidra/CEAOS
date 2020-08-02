@@ -1,4 +1,4 @@
-from coefficients import Coefficients
+from coefficients import Coefficients, Constants
 from data_models import States, Setpoints, Weather
 from equations.utils import total_side_vents_ventilation_rates, total_roof_ventilation_rates, \
     thermal_screen_air_flux_rate
@@ -37,7 +37,7 @@ def above_thermal_screen_and_outdoor_CO2_flux(states: States, setpoints: Setpoin
 
 def heat_blower_to_greenhouse_air_CO2_flux(setpoints: Setpoints):
     # Equation 8.54
-    eta_HeatCO2 = Coefficients.Outside.eta_HeatCO2
+    eta_HeatCO2 = Constants.eta_HeatCO2
     sensible_heat_flux_BlowAir = sensible_heat_flux_between_direct_air_heater_and_greenhouse_air(setpoints)
     return eta_HeatCO2 * sensible_heat_flux_BlowAir
 
@@ -45,6 +45,6 @@ def heat_blower_to_greenhouse_air_CO2_flux(setpoints: Setpoints):
 def external_CO2_added(setpoints: Setpoints):
     # Equation 8.77
     U_ExtCO2 = setpoints.U_ExtCO2
-    cap_extCO2 = Coefficients.Greenhouse.ActiveClimateControl.cap_extCO2
-    floor_area = Coefficients.Greenhouse.Construction.floor_area
+    cap_extCO2 = Coefficients.ActiveClimateControl.cap_extCO2
+    floor_area = Coefficients.Construction.floor_area
     return U_ExtCO2 * cap_extCO2 / floor_area
