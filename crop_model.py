@@ -5,5 +5,5 @@ import numpy as np
 
 class CropModel(ABC):
     @abstractmethod
-    def step(self, climate_obs: np.ndarray, setpoint: np.ndarray):
+    def step(self, climate_observations: np.ndarray, setpoint: np.ndarray):
         pass

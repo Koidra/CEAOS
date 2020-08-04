@@ -1,7 +1,8 @@
 import math
 
-from coefficients import Coefficients, Constants
+from coefficients import Coefficients
 from data_models import States
+from constants import *
 
 
 def canopy_heat_capacity(states: States) -> float:
@@ -10,7 +11,7 @@ def canopy_heat_capacity(states: States) -> float:
 
     :return: [J K^(-1) m^(-2)]
     """
-    return Constants.cap_Leaf * states.leaf_area_index
+    return CAP_LEAF * states.leaf_area_index
 
 
 def internal_external_canopy_heat_capacity(lumped_cover_heat_capacity: float) -> float:
@@ -28,12 +29,8 @@ def heating_pipe_heat_capacity():
     pipe_length = Coefficients.Heating.pipe_length
     phi_external_pipe = Coefficients.Heating.phi_external_pipe
     phi_internal_pipe = Coefficients.Heating.phi_internal_pipe
-    steel_density = Constants.steel_density
-    water_density = Constants.water_density
-    c_pSteel = Constants.c_pSteel
-    c_pWater = Constants.c_pWater
-    return 0.25 * math.pi * pipe_length(
-        (phi_external_pipe ** 2 - phi_internal_pipe ** 2) * steel_density * c_pSteel + phi_internal_pipe ** 2 * water_density * c_pWater)
+    return 0.25 * math.pi * pipe_length * \
+           ((phi_external_pipe ** 2 - phi_internal_pipe ** 2) * STEEL_DENSITY * C_PSTEEL + phi_internal_pipe ** 2 * WATER_DENSITY * C_PWATER)
 
 
 def remaining_object_heat_capacity(h_obj, rho_obj, c_p_obj):
@@ -43,8 +40,6 @@ def remaining_object_heat_capacity(h_obj, rho_obj, c_p_obj):
 
 def air_compartment_water_vapor_capacity(states: States):
     # Equation 8.25
-    M_Water = Constants.M_Water
     air_height = Coefficients.Construction.air_height
-    M_Gas = Constants.M_Gas
     air_t = states.air_t
-    return M_Water * air_height / ((air_t + 273.15) * M_Gas)
+    return M_WATER * air_height / ((air_t + 273.15) * M_GAS)

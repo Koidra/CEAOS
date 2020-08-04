@@ -18,7 +18,7 @@ class Setpoints(NamedTuple):
 
 class States(NamedTuple):
     pipe_t: float  # pipe temperature
-    can_t: float  # canopy temperature
+    canopy_t: float  # canopy temperature
     air_t: float  # greenhouse air temperature
     internal_cov_t: float  # internal cover temperature
     external_cov_t: float  # external cover temperature
@@ -26,12 +26,12 @@ class States(NamedTuple):
     above_thermal_screen_t: float  # above thermal screen temperature a.k.a top compartment temperature
     floor_t: float  # floor temperature
     soil_j_t: [float, float, float, float, float]  # soil layer temperatures
-    CO2_Air: float  # CO2 in greenhouse air
-    CO2_Top: float  # CO2 in top compartment air
+    CO2_air: float  # CO2 in greenhouse air
+    CO2_above_thermal_screen: float  # CO2 in top compartment air
     # Recheck these vars
     leaf_area_index: float
     mechcool_t: float  # Mechanical cooling system temperature
-    mass_CO2_flux_AirCan: float  # CO2 flux from greenhouse air to canopy
+    mass_CO2_flux_AirCanopy: float  # CO2 flux from greenhouse air to canopy
 
 
 class Weather(NamedTuple):
@@ -40,5 +40,5 @@ class Weather(NamedTuple):
     sky_t: float  # sky temperature
     soil_out_t: float  # deep out soil temperature
     CO2_Out: float  # outdoor CO2
-    outdoor_vapor_pressure: float
+    outdoor_vp: float  # outdoor vapor pressure
     v_Wind: float  # wind velocity

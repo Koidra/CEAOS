@@ -4,93 +4,105 @@ Based on section 8.6
 """
 
 # 8.6.1 Global, PAR and NIR heat fluxes
-from coefficients import Constants
-from equations.canopy_transpiration import canopy_transpiration
-from equations.lumped_cover_layers import *
-from equations.utils import *
-from equations.vapor_fluxes import fogging_system_to_greenhouse_air_latent_vapor_flux, air_to_obj_vapor_flux
+from climate.equations.canopy_transpiration import canopy_transpiration
+from climate.equations.lumped_cover_layers import *
+from climate.equations.utils import *
+from climate.equations.vapor_fluxes import fogging_system_to_greenhouse_air_latent_vapor_flux, differentiable_air_to_obj_vapor_flux
+from constants import *
 
 
 # TODO: inline these
-def lumped_cover_virtual_NIR_transmission_coefficients(cover_NIR_reflection_coefficient):
+def lumped_cover_virtual_NIR_transmission_coefficients(cover_NIR_reflection_coef):
     # Equation 8.30
-    return 1 - cover_NIR_reflection_coefficient
+    return 1 - cover_NIR_reflection_coef
 
 
 def floor_virtual_NIR_transmission_coefficients():
     # Equation 8.30
-    floor_NIR_reflection_coefficient = Coefficients.Floor.floor_NIR_reflection_coefficient
-    return 1 - floor_NIR_reflection_coefficient
+    floor_NIR_reflection_coef = Coefficients.Floor.floor_NIR_reflection_coefficient
+    return 1 - floor_NIR_reflection_coef
 
 
 def canopy_virtual_NIR_transmission_coefficient(states: States):
     # Equation 8.31
-    canopy_NIR_extinction_coefficient = Constants.canopy_NIR_extinction_coefficient
-    return math.exp(-canopy_NIR_extinction_coefficient * states.leaf_area_index)
+    return math.exp(-CANOPY_NIR_EXTINCTION_COEFFICIENT * states.leaf_area_index)
 
 
 def canopy_virtual_NIR_reflection_coefficient(states: States):
     # Equation 8.32
-    canopy_NIR_reflection_coefficient = Constants.canopy_NIR_reflection_coefficient
     virtual_NIR_transmission_canopy_coef = canopy_virtual_NIR_transmission_coefficient(states)
-    return canopy_NIR_reflection_coefficient * (1 - virtual_NIR_transmission_canopy_coef)
+    return CANOPY_NIR_REFLECTION_COEFFICIENT * (1 - virtual_NIR_transmission_canopy_coef)
 
 
 def construction_elements_global_radiation(states: States, setpoints: Setpoints, weather: Weather):
     # Equation 8.36
     outdoor_global_rad = weather.outdoor_global_rad
     # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-    shScr_NIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
-    shScr_NIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
+    shScr_NIR_transmission_coef = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
+    shScr_NIR_reflection_coef = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
 
     # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_NIR_reflection_coefficient = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
+    roof_thScr_NIR_reflection_coef = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
 
     # Vanthoor NIR reflection coefficient of the lumped cover
-    cover_NIR_reflection_coefficient = double_layer_cover_reflection_coefficient(shScr_NIR_transmission_coefficient, shScr_NIR_reflection_coefficient, roof_thScr_NIR_reflection_coefficient)
+    cover_NIR_reflection_coef = double_layer_cover_reflection_coefficient(shScr_NIR_transmission_coef,
+                                                                          shScr_NIR_reflection_coef,
+                                                                          roof_thScr_NIR_reflection_coef)
     virtual_NIR_reflection_canopy_coef = canopy_virtual_NIR_reflection_coefficient(states)
-    floor_NIR_reflection_coefficient = Coefficients.Floor.floor_NIR_reflection_coefficient
+    floor_NIR_reflection_coef = Coefficients.Floor.floor_NIR_reflection_coefficient
 
-    virtual_NIR_transmission_cover_coef = lumped_cover_virtual_NIR_transmission_coefficients(cover_NIR_reflection_coefficient)
+    virtual_NIR_transmission_cover_coef = lumped_cover_virtual_NIR_transmission_coefficients(cover_NIR_reflection_coef)
     virtual_NIR_transmission_canopy_coef = canopy_virtual_NIR_transmission_coefficient(states)
     virtual_NIR_transmission_floor_coef = floor_virtual_NIR_transmission_coefficients()
 
     # NIR transmission coefficient of the cover and canopy
-    cover_can_NIR_transmission_coefficient = double_layer_cover_transmission_coefficient(virtual_NIR_transmission_cover_coef, virtual_NIR_transmission_canopy_coef, cover_NIR_reflection_coefficient, virtual_NIR_reflection_canopy_coef)  # line 380 / setGlAux / GreenLight
+    cover_canopy_NIR_transmission_coef = double_layer_cover_transmission_coefficient(virtual_NIR_transmission_cover_coef,
+                                                                                     virtual_NIR_transmission_canopy_coef,
+                                                                                     cover_NIR_reflection_coef,
+                                                                                     virtual_NIR_reflection_canopy_coef)  # line 380 / setGlAux / GreenLight
     # NIR reflection coefficient of the cover and canopy
-    cover_can_NIR_reflection_coefficient = double_layer_cover_reflection_coefficient(virtual_NIR_transmission_cover_coef, cover_NIR_reflection_coefficient, virtual_NIR_reflection_canopy_coef)  # line 383, 386 / setGlAux / GreenLight
+    cover_canopy_NIR_reflection_coef = double_layer_cover_reflection_coefficient(virtual_NIR_transmission_cover_coef,
+                                                                                 cover_NIR_reflection_coef,
+                                                                                 virtual_NIR_reflection_canopy_coef)  # line 383, 386 / setGlAux / GreenLight
 
     # NIR transmission coefficient of the cover, canopy and floor
-    cover_can_floor_NIR_transmission_coefficient = double_layer_cover_transmission_coefficient(cover_can_NIR_transmission_coefficient, virtual_NIR_transmission_floor_coef, cover_can_NIR_reflection_coefficient, floor_NIR_reflection_coefficient)  # line 389 / setGlAux / GreenLight
+    cover_canopy_floor_NIR_transmission_coef = double_layer_cover_transmission_coefficient(cover_canopy_NIR_transmission_coef,
+                                                                                           virtual_NIR_transmission_floor_coef,
+                                                                                           cover_canopy_NIR_reflection_coef,
+                                                                                           floor_NIR_reflection_coef)  # line 389 / setGlAux / GreenLight
     # NIR reflection coefficient of the cover, canopy and floor
-    cover_can_floor_NIR_reflection_coefficient = double_layer_cover_reflection_coefficient(cover_can_NIR_transmission_coefficient, cover_can_NIR_reflection_coefficient, floor_NIR_reflection_coefficient)  # line 392 / setGlAux / GreenLight
+    cover_canopy_floor_NIR_reflection_coef = double_layer_cover_reflection_coefficient(cover_canopy_NIR_transmission_coef,
+                                                                                       cover_canopy_NIR_reflection_coef,
+                                                                                       floor_NIR_reflection_coef)  # line 392 / setGlAux / GreenLight
 
-    shScr_PAR_transmission_coefficient = Coefficients.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
-    shScr_PAR_reflection_coefficient = Coefficients.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
+    shScr_PAR_transmission_coef = Coefficients.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
+    shScr_PAR_reflection_coef = Coefficients.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
 
     # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_PAR_transmission_coefficient = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
+    roof_thScr_PAR_transmission_coef = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
     # PAR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_PAR_reflection_coefficient = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
+    roof_thScr_PAR_reflection_coef = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
 
     # NIR absorption coefficient of the canopy
-    NIR_absorption_canopy_coef = 1 - cover_can_floor_NIR_transmission_coefficient - cover_can_floor_NIR_reflection_coefficient  # page 213
+    NIR_absorption_canopy_coef = 1 - cover_canopy_floor_NIR_transmission_coef - cover_canopy_floor_NIR_reflection_coef  # page 213
     # NIR absorption coefficient of the floor
-    NIR_absorption_floor_coef = cover_can_floor_NIR_transmission_coefficient  # page 213
+    NIR_absorption_floor_coef = cover_canopy_floor_NIR_transmission_coef  # page 213
 
-    cover_PAR_transmission_coefficient = double_layer_cover_transmission_coefficient(shScr_PAR_transmission_coefficient, roof_thScr_PAR_transmission_coefficient, shScr_PAR_reflection_coefficient, roof_thScr_PAR_reflection_coefficient)
+    cover_PAR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_PAR_transmission_coef,
+                                                                              roof_thScr_PAR_transmission_coef,
+                                                                              shScr_PAR_reflection_coef,
+                                                                              roof_thScr_PAR_reflection_coef)
 
     ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
-    ratio_GlobPAR = Constants.ratio_GlobPAR
-    ratio_GlobNIR = Constants.ratio_GlobNIR
-    return ratio_GlobAir * outdoor_global_rad * (cover_PAR_transmission_coefficient * ratio_GlobPAR + (NIR_absorption_canopy_coef + NIR_absorption_floor_coef) * ratio_GlobNIR)
+    return ratio_GlobAir * outdoor_global_rad * (cover_PAR_transmission_coef * RATIO_GLOBALPAR + (
+                NIR_absorption_canopy_coef + NIR_absorption_floor_coef) * RATIO_GLOBALNIR)
 
 
 def thermal_screen_FIR_transmission_coefficient(setpoints: Setpoints):
     # Equation 8.39
     U_ThScr = setpoints.U_ThScr
-    thScr_FIR_transmission_coefficient = Coefficients.Thermalscreen.thScr_FIR_transmission_coefficient
-    return 1 - U_ThScr * (1 - thScr_FIR_transmission_coefficient)
+    thScr_FIR_transmission_coef = Coefficients.Thermalscreen.thScr_FIR_transmission_coefficient
+    return 1 - U_ThScr * (1 - thScr_FIR_transmission_coef)
 
 
 # 8.6.3 Convection and conduction
@@ -112,19 +124,19 @@ def latent_heat_fluxes(MV) -> float:
     :param float MV: the vapor flux from object 1 to object 2
     :return: The latent heat flux from object 1 to object 2 [W m^-2]
     """
-    return Constants.evaporation_latent_heat * MV
+    return EVAPORATION_LATENT_HEAT * MV
 
 
 def sensible_heat_flux_between_canopy_and_air(states: States):
-    can_t = states.can_t
+    canopy_t = states.canopy_t
     air_t = states.air_t
-    HEC_CanAir = 2 * Constants.canopy_air_convective_heat_exchange_coef * states.leaf_area_index
-    return convective_and_conductive_heat_fluxes(HEC_CanAir, can_t, air_t)
+    HEC_CanopyAir = 2 * CANOPY_AIR_CONVECTIVE_HEAT_EXCHANGE_COEF * states.leaf_area_index
+    return convective_and_conductive_heat_fluxes(HEC_CanopyAir, canopy_t, air_t)
 
 
 def latent_heat_flux_between_canopy_and_air(states: States, setpoints: Setpoints, weather: Weather):
-    mass_vapor_flux_CanAir = canopy_transpiration(states, setpoints, weather)
-    return latent_heat_fluxes(mass_vapor_flux_CanAir)
+    mass_vapor_flux_CanopyAir = canopy_transpiration(states, setpoints, weather)
+    return latent_heat_fluxes(mass_vapor_flux_CanopyAir)
 
 
 def sensible_heat_flux_between_mechanical_cooling_and_greenhouse_air(setpoints: Setpoints, states: States):
@@ -177,23 +189,21 @@ def sensible_heat_flux_between_thermal_screen_and_greenhouse_air(states: States,
 
 
 def sensible_heat_flux_between_outdoor_and_greenhouse_air(states: States, setpoints: Setpoints, weather: Weather):
-    c_pAir = Constants.c_pAir
     air_t = states.air_t
     outdoor_t = weather.outdoor_t
     density_air = air_density()
     total_side_vent_rate = total_side_vents_ventilation_rates(setpoints, states, weather)
     f_VentForced = 0  # According to GreenLight, forced ventilation doesn't exist in this greenhouse
-    HEC_AirOut = density_air * c_pAir * (total_side_vent_rate + f_VentForced)
+    HEC_AirOut = density_air * C_PAIR * (total_side_vent_rate + f_VentForced)
     return convective_and_conductive_heat_fluxes(HEC_AirOut, air_t, outdoor_t)
 
 
 def sensible_heat_flux_between_above_thermal_screen_and_greenhouse_air(states: States, setpoints: Setpoints, weather: Weather):
-    c_pAir = Constants.c_pAir
     air_t = states.air_t
     density_air = air_density()
     above_thermal_screen_t = states.above_thermal_screen_t
     thScr_air_flux_rate = thermal_screen_air_flux_rate(setpoints, states, weather)
-    HEC_AirTop = density_air * c_pAir * thScr_air_flux_rate
+    HEC_AirTop = density_air * C_PAIR * thScr_air_flux_rate
     return convective_and_conductive_heat_fluxes(HEC_AirTop, air_t, above_thermal_screen_t)
 
 
@@ -216,10 +226,10 @@ def sensible_heat_flux_between_floor_and_first_layer_soil(states: States):
 def latent_heat_flux_between_greenhouse_air_and_thermal_screen(states: States, setpoints: Setpoints):
     air_t = states.air_t
     thermal_screen_t = states.thermal_screen_t
-    air_vapor_pressure = saturation_vapor_pressure(air_t)
-    thScr_vapor_pressure = saturation_vapor_pressure(thermal_screen_t)
+    air_vp = saturation_vapor_pressure(air_t)
+    thScr_vp = saturation_vapor_pressure(thermal_screen_t)
     HEC_AirThScr = 1.7 * setpoints.U_ThScr * abs(air_t - thermal_screen_t) ** 0.33
-    mass_vapor_flux_AirThScr = air_to_obj_vapor_flux(air_vapor_pressure, thScr_vapor_pressure, HEC_AirThScr)
+    mass_vapor_flux_AirThScr = differentiable_air_to_obj_vapor_flux(air_vp, thScr_vp, HEC_AirThScr)
     return latent_heat_fluxes(mass_vapor_flux_AirThScr)
 
 
@@ -241,12 +251,11 @@ def sensible_heat_flux_between_above_thermal_screen_and_internal_cover(states: S
 
 
 def sensible_heat_flux_between_above_thermal_screen_and_outdoor(states: States, setpoints: Setpoints, weather: Weather):
-    c_pAir = Constants.c_pAir
     above_thermal_screen_t = states.above_thermal_screen_t
     outdoor_t = weather.outdoor_t
     density_air = air_density()
     total_roof_vent_rate = total_roof_ventilation_rates(setpoints, states, weather)
-    HEC_TopOut = density_air * c_pAir * total_roof_vent_rate
+    HEC_TopOut = density_air * C_PAIR * total_roof_vent_rate
     return convective_and_conductive_heat_fluxes(HEC_TopOut, above_thermal_screen_t, outdoor_t)
 
 
@@ -256,10 +265,10 @@ def latent_heat_flux_between_above_thermal_screen_and_internal_cover(states: Sta
     c_HECin = Coefficients.Construction.c_HECin
     cover_area = Coefficients.Construction.cover_area
     floor_area = Coefficients.Construction.floor_area
-    above_thermal_screen_vapor_pressure = saturation_vapor_pressure(above_thermal_screen_t)
-    cov_in_vapor_pressure = saturation_vapor_pressure(internal_cov_t)
+    above_thermal_screen_vp = saturation_vapor_pressure(above_thermal_screen_t)
+    cov_in_vp = saturation_vapor_pressure(internal_cov_t)
     HEC_TopCov_in = c_HECin * (above_thermal_screen_t - internal_cov_t) ** 0.33 * cover_area / floor_area
-    mass_vapor_flux_TopCov_in = air_to_obj_vapor_flux(above_thermal_screen_vapor_pressure, cov_in_vapor_pressure, HEC_TopCov_in)
+    mass_vapor_flux_TopCov_in = differentiable_air_to_obj_vapor_flux(above_thermal_screen_vp, cov_in_vp, HEC_TopCov_in)
     return latent_heat_fluxes(mass_vapor_flux_TopCov_in)
 
 
