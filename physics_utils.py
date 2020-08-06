@@ -8,18 +8,22 @@ Units
  - Temperature: Celsius
 """
 
-def saturation_ah(t: float) -> float:
-    # Ref: https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/
-    c = 6.112 * 18.02 / 0.08314
-    c = c / 1.2  # the absolute humidity in the reference has unit g/m3 (we use g/kg)
-    return c * exp(17.67 * t / (t + 243.5)) / (273.15 + t)
+GAS_CONSTANT = 8.314463  # J/K/mol
+WATER_MOLECULAR_WEIGHT = 18.02  # g/mol
+
+def _kelvin(t_celsius: float) -> float:
+    return t_celsius + 273.15
+
+def saturation_vapor_pressure(t: float) -> float:
+    return 0.6112 * exp(17.67 * t / (t + 243.5))
+
+def vapor_pressure(rh: float, t: float) -> float:
+    return rh * saturation_vapor_pressure(t)
 
 # From below, the unit of rh is [0,1], not %
 def absolute_humidity(rh: float, t: float) -> float:
-    return rh * saturation_ah(t)
-
-def relative_humidity(ah: float, t: float) -> float:
-    return ah / saturation_ah(t)
+    n = vapor_pressure(rh, t) / (GAS_CONSTANT * _kelvin(t))  # ideal gas equation: PV = nRT; V=1
+    return n * WATER_MOLECULAR_WEIGHT / 1.2  # AH in g/m3 = 1.2 * AH in g/kg
 
 def dewpoint(rh: float, t: float) -> float:
     """
