@@ -3,7 +3,7 @@ from math import exp, log
 
 """
 Units
- - Absolute humidity: g/kg
+ - Absolute humidity: g/m3
  - Relative humidity: between 0 and 1
  - Temperature: Celsius
 """
@@ -23,7 +23,7 @@ def vapor_pressure(rh: float, t: float) -> float:
 # From below, the unit of rh is [0,1], not %
 def absolute_humidity(rh: float, t: float) -> float:
     n = vapor_pressure(rh, t) / (GAS_CONSTANT * _kelvin(t))  # ideal gas equation: PV = nRT; V=1
-    return n * WATER_MOLECULAR_WEIGHT / 1.2  # AH in g/m3 = 1.2 * AH in g/kg
+    return n * WATER_MOLECULAR_WEIGHT
 
 def dewpoint(rh: float, t: float) -> float:
     """
