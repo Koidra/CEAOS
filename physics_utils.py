@@ -25,6 +25,9 @@ def absolute_humidity(rh: float, t: float) -> float:
     n = vapor_pressure(rh, t) / (GAS_CONSTANT * _kelvin(t))  # ideal gas equation: PV = nRT; V=1
     return n * WATER_MOLECULAR_WEIGHT
 
+def relative_humidity(vp: float, t: float) -> float:
+    return vp / saturation_vapor_pressure(t)
+
 def dewpoint(rh: float, t: float) -> float:
     """
     Calculate the dewpoint from relative_humidity
