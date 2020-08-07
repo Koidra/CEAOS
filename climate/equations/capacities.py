@@ -34,7 +34,15 @@ def heating_pipe_heat_capacity():
 
 
 def remaining_object_heat_capacity(h_obj, rho_obj, c_p_obj):
-    # Equation 8.23
+    """
+    Equation 8.23
+    Args:
+        h_obj:
+        rho_obj:
+        c_p_obj:
+
+    Returns: [J K^-1 m^-2]
+    """
     return h_obj * rho_obj * c_p_obj
 
 

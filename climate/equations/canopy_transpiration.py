@@ -34,7 +34,7 @@ def canopy_stomatal_resistance(states: States, setpoints: Setpoints, weather: We
     """
     return MIN_CANOPY_TRANSPIRATION_RESISTANCE * \
            resistance_factor(states, setpoints, weather, 'above_canopy_global_radiation') * \
-           resistance_factor(states, setpoints, weather, 'CO2_air') * \
+           resistance_factor(states, setpoints, weather, 'air_CO2') * \
            resistance_factor(states, setpoints, weather, 'VP')
 
 
@@ -82,10 +82,10 @@ def resistance_factor(states: States, setpoints: Setpoints, weather: Weather, ty
         # Global radiation above the canopy
         above_canopy_global_radiation = rCanopySun  # Note: line 338 / setGlAux / GreenLight
         return (above_canopy_global_radiation + C_EVAP1) / (above_canopy_global_radiation + C_EVAP2)
-    elif type == 'CO2_air':
+    elif type == 'air_CO2':
         c_evap3 = smoothed_transpiration_parameters(nth=3, setpoints=setpoints, states=states, weather=weather)
-        CO2_air = states.CO2_air
-        return 1 + c_evap3(ETA_MG_PPM * CO2_air - 200) ** 2
+        air_CO2 = states.air_CO2
+        return 1 + c_evap3(ETA_MG_PPM * air_CO2 - 200) ** 2
     elif type == 'VP':
         c_evap4 = smoothed_transpiration_parameters(nth=4, setpoints=setpoints, states=states, weather=weather)
         canopy_vp = saturation_vapor_pressure(states.canopy_t)

@@ -5,10 +5,9 @@ r_: The reflection coefficient of the layer
 t_: The transmission coefficient of the layer
 
 The default model contains three cover layers, i.e.
-a movable outdoor shading screen (ShScr),
-a semi-permanent shading screen (ShScrPer),
-the greenhouse roof (Rf) and
-a movable indoor thermal screen (ThScr).
+    - A movable outdoor shading screen (ShScr)
+    - The greenhouse roof (Rf)
+    - A movable indoor thermal screen (ThScr).
 """
 import math
 

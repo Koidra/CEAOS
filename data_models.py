@@ -26,8 +26,8 @@ class States(NamedTuple):
     above_thermal_screen_t: float  # above thermal screen temperature a.k.a top compartment temperature
     floor_t: float  # floor temperature
     soil_j_t: [float, float, float, float, float]  # soil layer temperatures
-    CO2_air: float  # CO2 in greenhouse air
-    CO2_above_thermal_screen: float  # CO2 in top compartment air
+    air_CO2: float  # CO2 in greenhouse air
+    above_thermal_screen_CO2: float  # CO2 in top compartment air
     # Recheck these vars
     leaf_area_index: float
     mechcool_t: float  # Mechanical cooling system temperature
@@ -39,6 +39,6 @@ class Weather(NamedTuple):
     outdoor_t: float  # outdoor temperature
     sky_t: float  # sky temperature
     soil_out_t: float  # deep out soil temperature
-    CO2_Out: float  # outdoor CO2
+    outdoor_CO2: float  # outdoor CO2
     outdoor_vp: float  # outdoor vapor pressure
     v_Wind: float  # wind velocity

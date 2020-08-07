@@ -18,11 +18,11 @@ BOLTZMANN = 5.670E-8
 # FIR emission coefficient of the canopy.
 # Unit: [-].
 # Ref: Stanghellini (1987): leaves are considered as black bodies
-CANOPY_FIR_EMISSION_COEFFICIENT = 1
+CANOPY_FIR_EMISSION_COEF = 1
 
 # FIR emission coefficient of the sky.
 # Unit: [-]. Ref: by definition
-SKY_FIR_EMISSION_COEFFICIENT = 1
+SKY_FIR_EMISSION_COEF = 1
 
 # Ratio between NIR and the outside global radiation.
 # Unit: [-].
@@ -58,12 +58,12 @@ DENSITY_AIR0 = 1.20
 # The PAR reflection coefficient of the top of the canopy.
 # Unit: [-].
 # Ref: Marcelis et al. (1998)
-CANOPY_PAR_REFLECTION_COEFFICIENT = 0.07
+CANOPY_PAR_REFLECTION_COEF = 0.07
 
 # The NIR reflection coefficient of the top of the canopy.
 # Unit: [-].
 # Ref: De Zwart (1996): based on absorption of diffuse NIR
-CANOPY_NIR_REFLECTION_COEFFICIENT = 0.35
+CANOPY_NIR_REFLECTION_COEF = 0.35
 
 # Density of steel.
 # Unit: kg m^-3
@@ -134,22 +134,22 @@ GRAVITY = 9.81
 # PAR extinction coefficient of the canopy.
 # Unit: [-].
 # Ref: Marcelis et al. (1998)
-CANOPY_PAR_EXTINCTION_COEFFICIENT = 0.7
+CANOPY_PAR_EXTINCTION_COEF = 0.7
 
 # PAR extinction coefficient of the canopy when PAR is reflected from the floor.
 # Unit: [-].
 # Ref: Assumed for white mulching by Vanthoor
-FLOOR_PAR_EXTINCTION_COEFFICIENT = 0.7
+FLOOR_PAR_EXTINCTION_COEF = 0.7
 
 # Extinction coefficient of the canopy for NIR.
 # Unit: [-].
 # Ref: Based on absorption of diffuse NIR of De Zwart (1996)
-CANOPY_NIR_EXTINCTION_COEFFICIENT = 0.27
+CANOPY_NIR_EXTINCTION_COEF = 0.27
 
 # Extinction coefficient of the canopy for FIR.
 # Unit: [-].
 # Ref: De Zwart (1996)
-CANOPY_FIR_EXTINCTION_COEFFICIENT = 0.94
+CANOPY_FIR_EXTINCTION_COEF = 0.94
 
 # Molar mass of air.
 # Unit: kg kmol^-1
@@ -412,3 +412,9 @@ MAX_INSTANTANEOUS_T = 40
 # Unit: [-]
 # Ref: Heuvelink (1996)
 Q10_M = 2
+
+
+# Leaves are pruned back to this LAI
+# Unit: [m^2 m^-2]
+# Ref: GreenLight
+LAI_Max = 3

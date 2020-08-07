@@ -25,17 +25,26 @@ def floor_virtual_NIR_transmission_coefficients():
 
 def canopy_virtual_NIR_transmission_coefficient(states: States):
     # Equation 8.31
-    return math.exp(-CANOPY_NIR_EXTINCTION_COEFFICIENT * states.leaf_area_index)
+    return math.exp(-CANOPY_NIR_EXTINCTION_COEF * states.leaf_area_index)
 
 
 def canopy_virtual_NIR_reflection_coefficient(states: States):
     # Equation 8.32
     virtual_NIR_transmission_canopy_coef = canopy_virtual_NIR_transmission_coefficient(states)
-    return CANOPY_NIR_REFLECTION_COEFFICIENT * (1 - virtual_NIR_transmission_canopy_coef)
+    return CANOPY_NIR_REFLECTION_COEF * (1 - virtual_NIR_transmission_canopy_coef)
 
 
 def construction_elements_global_radiation(states: States, setpoints: Setpoints, weather: Weather):
-    # Equation 8.36
+    """
+    Equation 8.36
+    Args:
+        states:
+        setpoints:
+        weather:
+
+    Returns:[W m^-2]
+
+    """
     outdoor_global_rad = weather.outdoor_global_rad
     # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
     shScr_NIR_transmission_coef = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
@@ -94,8 +103,8 @@ def construction_elements_global_radiation(states: States, setpoints: Setpoints,
                                                                               roof_thScr_PAR_reflection_coef)
 
     ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
-    return ratio_GlobAir * outdoor_global_rad * (cover_PAR_transmission_coef * RATIO_GLOBALPAR + (
-                NIR_absorption_canopy_coef + NIR_absorption_floor_coef) * RATIO_GLOBALNIR)
+    return ratio_GlobAir * outdoor_global_rad * \
+           (cover_PAR_transmission_coef * RATIO_GLOBALPAR + (NIR_absorption_canopy_coef + NIR_absorption_floor_coef) * RATIO_GLOBALNIR)
 
 
 def thermal_screen_FIR_transmission_coefficient(setpoints: Setpoints):
