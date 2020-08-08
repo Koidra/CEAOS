@@ -7,7 +7,7 @@ from numpy import ndarray as mat
 def rk4(A: mat, x: vec, h: float) -> vec:
     """
     This is an implementation of Runge-Kutta 4th order method
-    A: square matrix encapsulating the dynamics. A is assumed to be constant during the step.
+    A: square matrix encapsulating the dynamics dx/dt = A * x. A is assumed to be constant during the step.
     x: state variable at time t
     return x at t+h
     """
