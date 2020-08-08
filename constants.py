@@ -413,8 +413,12 @@ MAX_INSTANTANEOUS_T = 40
 # Ref: Heuvelink (1996)
 Q10_M = 2
 
-
 # Leaves are pruned back to this LAI
 # Unit: [m^2 m^-2]
 # Ref: GreenLight
 LAI_Max = 3
+
+# Relative growth rate
+# Unit: {kg {dw grown} kg^{-1} {existing dw} s^{-1}
+# Ref: GreenLight
+RELATIVE_GROWTH_RATE = 3e-6

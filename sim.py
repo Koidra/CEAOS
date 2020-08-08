@@ -1,4 +1,3 @@
-import numpy as np
 from numpy import ndarray as vec
 from climate_model import IndoorClimateModel
 from crop_model import CropModel
