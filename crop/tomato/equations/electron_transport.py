@@ -32,19 +32,19 @@ def potential_electron_transport(carbohydrate_amount_Leaf, canopy_t):
         potential_electron_transport_rate
     = max_electron_transport_rate_at_25
     * math.exp(ACTIVATION_ENERGY_JPOT *
-               (canopy_temperature - reference_temperature)/(M_GAS*canopy_temperature*reference_temperature)))
-    * (1+math.exp((ENTROPY_TERM_JPOT * reference_temperature - DEACTIVATION_ENERGY_JPOT)/(M_GAS*reference_temperature)))
-    / (1+math.exp((ENTROPY_TERM_JPOT * canopy_temperature - DEACTIVATION_ENERGY_JPOT)/(M_GAS*canopy_temperature)))
+               (reference_canopy_t - REFERENCE_TEMPERATURE_JPOT)/(M_GAS*reference_canopy_t*REFERENCE_TEMPERATURE_JPOT)))
+    * (1+math.exp((ENTROPY_TERM_JPOT * REFERENCE_TEMPERATURE_JPOT - DEACTIVATION_ENERGY_JPOT)/(M_GAS*REFERENCE_TEMPERATURE_JPOT)))
+    / (1+math.exp((ENTROPY_TERM_JPOT * reference_canopy_t - DEACTIVATION_ENERGY_JPOT)/(M_GAS*reference_canopy_t)))
 
     Returns: potential electron transport rate[µmol {e-} m^-2 s^-1]
     """
+    reference_canopy_t = canopy_t + 273.15
     max_canopy_electron_transport_rate_at_25 = max_canopy_electron_transport_at_25(carbohydrate_amount_Leaf)
-    reference_temperature = 0
     return max_canopy_electron_transport_rate_at_25 \
         * math.exp(ACTIVATION_ENERGY_JPOT
-                   * (canopy_t - reference_temperature)/(M_GAS*canopy_t*reference_temperature)) \
-        * (1+math.exp((ENTROPY_TERM_JPOT * reference_temperature - DEACTIVATION_ENERGY_JPOT)/(M_GAS*reference_temperature))) \
-        / (1+math.exp((ENTROPY_TERM_JPOT * canopy_t - DEACTIVATION_ENERGY_JPOT)/(M_GAS*canopy_t)))
+                   * (reference_canopy_t - REFERENCE_TEMPERATURE_JPOT)/(M_GAS*reference_canopy_t*REFERENCE_TEMPERATURE_JPOT)) \
+        * (1+math.exp((ENTROPY_TERM_JPOT * REFERENCE_TEMPERATURE_JPOT - DEACTIVATION_ENERGY_JPOT)/(M_GAS*REFERENCE_TEMPERATURE_JPOT))) \
+        / (1+math.exp((ENTROPY_TERM_JPOT * reference_canopy_t - DEACTIVATION_ENERGY_JPOT)/(M_GAS*reference_canopy_t)))
 
 
 def max_canopy_electron_transport_at_25(carbohydrate_amount_Leaf):
