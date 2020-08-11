@@ -1,8 +1,8 @@
 import math
 
-from constants import *
-from crop.tomato.equations.radiations import PAR_absorbed_by_canopy
-from crop.tomato.equations.utils import leaf_area_index
+from ...constants import *
+from .radiations import PAR_absorbed_by_canopy
+from .utils import leaf_area_index
 
 
 def electron_transport(carbohydrate_amount_Leaf, outdoor_global_rad, canopy_t):

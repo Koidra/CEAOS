@@ -1,7 +1,7 @@
-from crop.tomato.crop_model import TomatoModel
-from crop.tomato.equations.carbohydrate_flows import *
-from crop.tomato.equations.fruit_flow import fruit_flow_through_fruit_development_stage
-from data_models import Weather, States
+from ...data_models import Weather, States
+from .crop_model import TomatoModel
+from .carbohydrate_flows import *
+from .fruit_flow import fruit_flow_through_fruit_development_stage
 
 
 def buffer_carbohydrates_amount(crop_inputs: TomatoModel, climate_inputs: States, weather_inputs: Weather):

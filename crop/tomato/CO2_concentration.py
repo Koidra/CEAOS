@@ -1,5 +1,5 @@
-from constants import *
-from crop.tomato.equations.electron_transport import max_canopy_electron_transport_at_25
+from ...constants import *
+from .electron_transport import max_canopy_electron_transport_at_25
 
 
 def CO2_concentration_inside_stomata(air_CO2):
@@ -8,7 +8,7 @@ def CO2_concentration_inside_stomata(air_CO2):
     stomata_CO2_concentration = GREENHOUSE_AIR_TO_STOMATA_CO2_CONCENTRATION*CO2
     Returns: CO2 concentration inside stomata [µmol {CO2} mol^-1 {air}]
     """
-    return GREENHOUSE_AIR_TO_STOMATA_CO2_CONCENTRATION*air_CO2
+    return GREENHOUSE_AIR_TO_STOMATA_CO2_CONCENTRATION * air_CO2
 
 
 def CO2_compensation(canopy_t):

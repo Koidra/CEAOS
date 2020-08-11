@@ -1,6 +1,6 @@
 import math
 
-from constants import *
+from ...constants import *
 
 
 def leaf_area_index(carbohydrate_amount_Leaf):

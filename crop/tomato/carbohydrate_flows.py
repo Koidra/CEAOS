@@ -1,8 +1,8 @@
-from crop.tomato.equations.CO2_concentration import CO2_concentration_inside_stomata, CO2_compensation
-from crop.tomato.equations.electron_transport import electron_transport
-from crop.tomato.equations.fruit_flow import fruit_set_of_first_development_stage
-from crop.tomato.equations.inhibitions import *
-from crop.tomato.equations.utils import *
+from .CO2_concentration import CO2_concentration_inside_stomata, CO2_compensation
+from .electron_transport import electron_transport
+from .fruit_flow import fruit_set_of_first_development_stage
+from .inhibitions import *
+from .utils import *
 
 
 def net_photosynthesis_rate(carbohydrate_amount_Buf, carbohydrate_amount_Leaf, outdoor_global_rad, air_CO2, canopy_t):
@@ -20,11 +20,11 @@ def net_photosynthesis_rate(carbohydrate_amount_Buf, carbohydrate_amount_Leaf, o
                                                                         canopy_t,
                                                                         stomata_CO2_concentration,
                                                                         CO2_compensation_point)
-    photosynthesis_process_photorespiration_rate = photorespiration_rate(gross_canopy_photosynthesis_rate,
-                                                                         stomata_CO2_concentration,
-                                                                         CO2_compensation_point)
     return M_CH2O * carbohydrates_saturation_photosynthesis_rate_inhibition_rate \
-           * (gross_canopy_photosynthesis_rate - photosynthesis_process_photorespiration_rate)
+           * (gross_canopy_photosynthesis_rate
+              - photorespiration_rate(gross_canopy_photosynthesis_rate,
+                                      stomata_CO2_concentration,
+                                      CO2_compensation_point))
 
 
 def canopy_level_photosynthesis_rate(carbohydrate_amount_Leaf, outdoor_global_rad, canopy_t, stomata_CO2_concentration, CO2_compensation_point):
