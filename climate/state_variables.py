@@ -14,11 +14,13 @@ The state variables of the model are all described by differential equations.
 - air_CO2: Greenhouse air CO2
 - top_CO2: The CO2 of the compartment above the thermal screen
 """
-from climate.equations.CO2_fluxes import *
-from climate.equations.capacities import *
-from climate.equations.radiation_fluxes import *
-from climate.equations.vapor_fluxes import *
-
+from .CO2_fluxes import *
+from .heat_fluxes import *
+from .capacities import *
+from .lumped_cover_layers import *
+from .radiation_fluxes import *
+from .vapor_fluxes import *
+from .utils import air_density
 
 def canopy_temperature(setpoints: Setpoints, states: States, weather: Weather):
     """
@@ -54,7 +56,7 @@ def greenhouse_air_temperature(setpoints: Setpoints, states: States, weather: We
                     - latent_heat_flux_AirFog
     :return: The greenhouse air temperature
     """
-    air_height = Coefficients.Construction.air_height
+    air_height = coefs.Construction.air_height
     density_air = air_density()
     cap_Air = remaining_object_heat_capacity(air_height, density_air, C_PAIR)
 
@@ -85,9 +87,9 @@ def floor_temperature(setpoints: Setpoints, states: States, weather: Weather):
                       - radiation_flux_FlrCov_in - radiation_flux_FlrSky - radiation_flux_FlrThScr
     :return: The floor temperature
     """
-    floor_thickness = Coefficients.Floor.floor_thickness
-    floor_density = Coefficients.Floor.floor_density
-    c_pFlr = Coefficients.Floor.c_pFlr
+    floor_thickness = coefs.Floor.floor_thickness
+    floor_density = coefs.Floor.floor_density
+    c_pFlr = coefs.Floor.c_pFlr
     cap_Flr = remaining_object_heat_capacity(floor_thickness, floor_density, c_pFlr)
 
     sensible_heat_flux_AirFlr = sensible_heat_flux_between_floor_and_greenhouse_air(states)
@@ -105,7 +107,7 @@ def floor_temperature(setpoints: Setpoints, states: States, weather: Weather):
             - radiation_flux_FlrCov_in - radiation_flux_FlrSky - radiation_flux_FlrThScr) / cap_Flr
 
 
-def soil_temperature(jth: int, states: States, weather: Weather):  # j = 1,2,..,5
+def soil_temperature(j: int, states: States, weather: Weather):  # j = 1,2,..,5
     """
     Equation 2.4 / 8.4
     cap_soil_j * soil_j_t = sensible_heat_flux_soil_j_minus_soil_j - sensible_heat_flux_soil_j_soil_j_plus
@@ -113,16 +115,16 @@ def soil_temperature(jth: int, states: States, weather: Weather):  # j = 1,2,..,
     :return: The soil temperature
     """
 
-    h_soil_j_minus = Coefficients.Floor.floor_thickness if jth == 1 else Coefficients.Soil.soil_thicknesses[jth - 2]
-    h_soil_j = Coefficients.Soil.soil_thicknesses[jth - 1]
-    h_soil_j_plus = 1.28 if jth == 5 else Coefficients.Soil.soil_thicknesses[jth]  # Assumed by GreenLight's authors, line 83, setGlParams
-    cap_soil_j = h_soil_j * Coefficients.Soil.rho_c_p_So
-    soil_heat_conductivity = Coefficients.Soil.soil_heat_conductivity
+    h_soil_j_minus = coefs.Floor.floor_thickness if j == 1 else coefs.Soil.soil_thicknesses[j - 2]
+    h_soil_j = coefs.Soil.soil_thicknesses[j - 1]
+    h_soil_j_plus = 1.28 if j == 5 else coefs.Soil.soil_thicknesses[j]  # Assumed by GreenLight's authors, line 83, setGlParams
+    cap_soil_j = h_soil_j * coefs.Soil.rho_c_p_So
+    soil_heat_conductivity = coefs.Soil.soil_heat_conductivity
     HEC_soil_j_minus_soil_j = 2 * soil_heat_conductivity / (h_soil_j_minus + h_soil_j)
     HEC_soil_j_soil_j_plus = 2 * soil_heat_conductivity / (h_soil_j + h_soil_j_plus)
-    soil_j_minus_t = states.floor_t if jth == 1 else states.soil_j_t[jth - 2]
-    soil_j_t = states.soil_j_t[jth - 1]
-    soil_j_plus_t = weather.soil_out_t if jth == 5 else states.soil_j_t[jth]
+    soil_j_minus_t = states.floor_t if j == 1 else states.soil_j_t[j - 2]
+    soil_j_t = states.soil_j_t[j - 1]
+    soil_j_plus_t = weather.soil_out_t if j == 5 else states.soil_j_t[j]
 
     sensible_heat_flux_soil_j_minus_soil_j = convective_and_conductive_heat_fluxes(HEC_soil_j_minus_soil_j, soil_j_minus_t, soil_j_t)
     sensible_heat_flux_soil_j_soil_j_plus = convective_and_conductive_heat_fluxes(HEC_soil_j_soil_j_plus, soil_j_t, soil_j_plus_t)
@@ -137,9 +139,9 @@ def thermal_screen_temperature(setpoints: Setpoints, states: States, weather: We
                                   - radiation_flux_ThScrCov_in - radiation_flux_ThScrSky
     :return: The thermal screen temperature
     """
-    thScr_thickness = Coefficients.Thermalscreen.thScr_thickness
-    thScr_density = Coefficients.Thermalscreen.thScr_density
-    c_pThScr = Coefficients.Thermalscreen.c_pThScr
+    thScr_thickness = coefs.Thermalscreen.thScr_thickness
+    thScr_density = coefs.Thermalscreen.thScr_density
+    c_pThScr = coefs.Thermalscreen.c_pThScr
     cap_ThScr = remaining_object_heat_capacity(thScr_thickness, thScr_density, c_pThScr)
 
     sensible_heat_flux_AirThScr = sensible_heat_flux_between_thermal_screen_and_greenhouse_air(states, setpoints)
@@ -162,8 +164,8 @@ def top_compartment_temperature(setpoints: Setpoints, states: States, weather: W
     TODO: need to recheck if top compartment params are the same with air params
     :return: The above thermal screen air temperature
     """
-    h_Top = Coefficients.Construction.greenhouse_height - Coefficients.Construction.air_height
-    elevation_height = Coefficients.Construction.elevation_height
+    h_Top = coefs.Construction.greenhouse_height - coefs.Construction.air_height
+    elevation_height = coefs.Construction.elevation_height
     pressure = 101325 * (1 - 2.5577e-5 * elevation_height) ** 5.25588
     density_Top = M_AIR * pressure / ((states.above_thermal_screen_t + 273.15) * M_GAS)  # Note: line 704 / setGlAux / GreenLight
     c_pTop = C_PAIR
@@ -290,14 +292,14 @@ def top_compartment_vapor_pressure(setpoints: Setpoints, states: States, weather
     return (mass_vapor_flux_AirTop - mass_vapor_flux_TopCov_in - mass_vapor_flux_TopOut) / cap_vapor_Top
 
 
-def greenhouse_air_CO2(setpoints: Setpoints, states: States, weather: Weather):
+def greenhouse_air_co2(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 2.12 / 8.12
     cap_CO2_Air * air_CO2 = mass_CO2_flux_BlowAir + mass_CO2_flux_ExtAir
                           - mass_CO2_flux_AirCanopy - mass_CO2_flux_AirTop - mass_CO2_flux_AirOut
     :return: The greenhouse air CO2 concentration
     """
-    cap_CO2_Air = Coefficients.Construction.air_height  # Note: line 45 / setDepParams / GreenLight
+    cap_CO2_Air = coefs.Construction.air_height
     mass_CO2_flux_BlowAir = heat_blower_to_greenhouse_air_CO2_flux(setpoints)
     mass_CO2_flux_ExtAir = external_CO2_added(setpoints)
     mass_CO2_flux_AirCanopy = states.mass_CO2_flux_AirCanopy
@@ -313,7 +315,7 @@ def top_compartment_air_CO2(setpoints: Setpoints, states: States, weather: Weath
     cap_CO2_Top * top_CO2 = mass_CO2_flux_AirTop - mass_CO2_flux_TopOut
     :return: The above thermal screen air CO2 concentration
     """
-    cap_CO2_Top = Coefficients.Construction.greenhouse_height - Coefficients.Construction.air_height  # Note: line 46 / setDepParams / GreenLight
+    cap_CO2_Top = coefs.Construction.greenhouse_height - coefs.Construction.air_height
     mass_CO2_flux_AirTop = greenhouse_air_and_above_thermal_screen_CO2_flux(states, setpoints, weather)
     mass_CO2_flux_TopOut = above_thermal_screen_and_outdoor_CO2_flux(states, setpoints, weather)
     return (mass_CO2_flux_AirTop - mass_CO2_flux_TopOut) / cap_CO2_Top

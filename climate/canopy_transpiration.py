@@ -1,7 +1,8 @@
-from data_models import States, Weather
-from climate.equations.lumped_cover_layers import *
-from climate.equations.utils import air_density, saturation_vapor_pressure
-from constants import *
+from .. import coefficients as coefs
+from ..constants import *
+from ..data_models import States, Weather, Setpoints
+from .lumped_cover_layers import *
+from .utils import air_density, saturation_vapor_pressure
 
 
 def canopy_transpiration(states: States, setpoints: Setpoints, weather: Weather) -> float:
@@ -62,8 +63,8 @@ def resistance_factor(states: States, setpoints: Setpoints, weather: Weather, ty
                                                                                   shScr_PAR_reflection_coef,
                                                                                   roof_thScr_PAR_reflection_coef)
 
-        shScr_NIR_transmission_coef = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
-        shScr_NIR_reflection_coef = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
+        shScr_NIR_transmission_coef = coefs.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
+        shScr_NIR_reflection_coef = coefs.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
 
         # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
         roof_thScr_NIR_transmission_coef = roof_thermal_screen_NIR_transmission_coefficient(setpoints)
