@@ -15,40 +15,40 @@ from coefficients import Coefficients
 from data_models import Setpoints
 
 
-def double_layer_cover_transmission_coefficient(tau_1, tau_2, rho_1, rho_2) -> float:
+def double_layer_cover_transmission_coefficient(transmission_coef_1, transmission_coef_2, reflection_coef_1, reflection_coef_2) -> float:
     """
     The transmission coefficient of a double layer cover
     Equation 8.14
-    :param float tau_1: the transmission coefficients of the first layer
-    :param float tau_2: the transmission coefficients of the second layer
-    :param float rho_1: the reflection coefficients of the first layer
-    :param float rho_2: the reflection coefficients of the second layer
+    :param float transmission_coef_1: the transmission coefficients of the first layer
+    :param float transmission_coef_2: the transmission coefficients of the second layer
+    :param float reflection_coef_1: the reflection coefficients of the first layer
+    :param float reflection_coef_2: the reflection coefficients of the second layer
     :return: The transmission coefficient
     """
-    return (tau_1 * tau_2) / (1 - rho_1 * rho_2)
+    return (transmission_coef_1 * transmission_coef_2) / (1 - reflection_coef_1 * reflection_coef_2)
 
 
-def double_layer_cover_reflection_coefficient(tau_1, rho_1, rho_2) -> float:
+def double_layer_cover_reflection_coefficient(transmission_coef_1, reflection_coef_1, reflection_coef_2) -> float:
     """
     The reflection coefficient
     Equation 8.15
-    :param float tau_1: the transmission coefficients of the first layer
-    :param float rho_1: the reflection coefficients of the first layer
-    :param float rho_2: the reflection coefficients of the second layer
+    :param float transmission_coef_1: the transmission coefficients of the first layer
+    :param float reflection_coef_1: the reflection coefficients of the first layer
+    :param float reflection_coef_2: the reflection coefficients of the second layer
     :return: The reflection coefficient
     """
 
-    return rho_1 + (tau_1 * tau_1 * rho_2) / (1 - rho_1 * rho_2)
+    return reflection_coef_1 + (transmission_coef_1 * transmission_coef_1 * reflection_coef_2) / (1 - reflection_coef_1 * reflection_coef_2)
 
 
-def absorption_coefficient(t, r):
+def absorption_coefficient(transmission_coef, reflection_coef):
     """The absorption coefficient
 
-    :param t: the transmission coefficient
-    :param r: the reflection coefficient
+    :param transmission_coef: the transmission coefficient
+    :param reflection_coef: the reflection coefficient
     :return: The absorption coefficient
     """
-    return 1 - (t + r)
+    return 1 - (transmission_coef + reflection_coef)
 
 # TODO: refactor this
 
@@ -86,7 +86,8 @@ def roof_thermal_screen_NIR_transmission_coefficient(setpoints: Setpoints):
     roof_NIR_reflection_coef = Coefficients.Roof.roof_NIR_reflection_coefficient
     thScr_NIR_transmission_coef = Coefficients.Thermalscreen.thScr_NIR_transmission_coefficient
     thScr_NIR_reflection_coef = Coefficients.Thermalscreen.thScr_NIR_reflection_coefficient
-    return (1 - U_Roof * (1 - roof_NIR_transmission_coef)) * (1 - U_ThScr * (1 - thScr_NIR_transmission_coef)) / \
+    return (1 - U_Roof * (1 - roof_NIR_transmission_coef)) *\
+           (1 - U_ThScr * (1 - thScr_NIR_transmission_coef)) / \
            (1 - U_Roof * roof_NIR_reflection_coef * U_ThScr * thScr_NIR_reflection_coef)
 
 

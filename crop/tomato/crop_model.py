@@ -11,5 +11,5 @@ class TomatoModel(NamedTuple):
     carbohydrate_amount_Stem: float
     dry_matter_Har: float
     sum_canopy_t: float
-    _24_canopy_t: float
+    last_24_canopy_t: float
 

@@ -33,21 +33,20 @@ def heating_pipe_heat_capacity():
            ((phi_external_pipe ** 2 - phi_internal_pipe ** 2) * STEEL_DENSITY * C_PSTEEL + phi_internal_pipe ** 2 * WATER_DENSITY * C_PWATER)
 
 
-def remaining_object_heat_capacity(h_obj, rho_obj, c_p_obj):
+def remaining_object_heat_capacity(height_obj, density_obj, heat_cap_obj):
     """
     Equation 8.23
     Args:
-        h_obj:
-        rho_obj:
-        c_p_obj:
+        height_obj: mean height of the greenhouse object [m]
+        density_obj: density of the greenhouse object [kg m-3]
+        heat_cap_obj: specific heat capacity of the object [J K-1 kg-1]
 
     Returns: [J K^-1 m^-2]
     """
-    return h_obj * rho_obj * c_p_obj
+    return height_obj * density_obj * heat_cap_obj
 
 
 def air_compartment_water_vapor_capacity(states: States):
     # Equation 8.25
     air_height = Coefficients.Construction.air_height
-    air_t = states.air_t
-    return M_WATER * air_height / ((air_t + 273.15) * M_GAS)
+    return M_WATER * air_height / ((states.air_t + 273.15) * M_GAS)

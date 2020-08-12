@@ -77,9 +77,6 @@ def above_thermal_screen_to_internal_cover_vapor_flux(states: States):
 
 def above_thermal_screen_to_outdoor_vapor_flux(states: States, setpoints: Setpoints, weather: Weather):
     above_thermal_screen_t = states.above_thermal_screen_t
-    outdoor_t = weather.outdoor_t
-    total_roof_vent_rate = total_roof_ventilation_rates(setpoints, states, weather)
-    f_TopOut = total_roof_vent_rate
+    f_TopOut = total_roof_ventilation_rates(setpoints, states, weather)
     above_thermal_screen_vp = saturation_vapor_pressure(above_thermal_screen_t)
-    outdoor_vp = weather.outdoor_vp
-    return general_vapor_flux(f_TopOut, above_thermal_screen_vp, outdoor_vp, above_thermal_screen_t, outdoor_t)
+    return general_vapor_flux(f_TopOut, above_thermal_screen_vp, weather.outdoor_vp, above_thermal_screen_t, weather.outdoor_t)

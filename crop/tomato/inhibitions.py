@@ -20,13 +20,13 @@ def non_optimal_instantaneous_temperature_inhibition(canopy_t):
     return smoothed_conditional_function(canopy_t, -0.8690, 10) * smoothed_conditional_function(canopy_t, 0.5793, 34)
 
 
-def non_optimal_24_hour_canopy_temperatures_inhibition(_24_canopy_t):
+def non_optimal_24_hour_canopy_temperatures_inhibition(last_24_canopy_t):
     """
     Equation B.3
     Returns: growth inhibition by non-optimal 24-hour mean temperature [-]
     """
-    return smoothed_conditional_function(_24_canopy_t, -1.1587, 15) \
-           * smoothed_conditional_function(_24_canopy_t, 1.3904, 24.5)
+    return smoothed_conditional_function(last_24_canopy_t, -1.1587, 15) \
+           * smoothed_conditional_function(last_24_canopy_t, 1.3904, 24.5)
 
 
 def crop_development_stage_inhibition(sum_canopy_t):

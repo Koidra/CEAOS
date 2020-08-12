@@ -4,6 +4,7 @@ from coefficients import Coefficients
 from data_models import Setpoints, States, Weather
 from constants import *
 
+
 def air_density():
     # Equation 8.24
     elevation_height = Coefficients.Construction.elevation_height
@@ -24,6 +25,17 @@ def thermal_screen_air_flux_rate(setpoints: Setpoints, states: States, weather: 
     density_mean_Air = (density_air + density_Out) / 2
     return U_ThScr * thScr_flux_coefficient * abs(air_t-outdoor_t) ** 0.66 + \
            (1-U_ThScr) * (0.5 * density_mean_Air * (1 - U_ThScr) * GRAVITY * abs(density_air - density_Out)) ** 0.5 / density_mean_Air
+
+
+def air_flux(air_flow: float, co2_source: float, co2_target: float) -> float:
+    """
+    Equation 8.46
+    Args:
+        co2_source, co2_target: CO2-concentration at location (mg m^-3)
+        air_flow: the air flux from location 1 to location 2 (m^3 m^-2 s^-1)
+    return: CO2 flux accompanying an air flux  from location 1 to location 2 [mg m^-2 s^-1]
+    """
+    return air_flow * (co2_source - co2_target)
 
 
 def mechanical_cooling_to_greenhouse_air_heat_exchange_coefficient(setpoints: Setpoints, states: States):

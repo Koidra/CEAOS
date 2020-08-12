@@ -14,6 +14,10 @@ class Setpoints(NamedTuple):
     U_ThScr: float  # Control of the thermal screen
     U_Ind: float  # Control of the heat input from industry
     U_Geo: float  # Control of the heat input from geothermal source
+    U_Lamp: float  # the switching of the top-lights
+    U_IntLamp: float  # the switching of the inter-lights
+    U_BoilGro: float  # the valve opening between the boiler and the grow pipes
+    U_BlScr: float  # the opening of the blackout screen
 
 
 class States(NamedTuple):
@@ -26,8 +30,14 @@ class States(NamedTuple):
     above_thermal_screen_t: float  # above thermal screen temperature a.k.a top compartment temperature
     floor_t: float  # floor temperature
     soil_j_t: [float, float, float, float, float]  # soil layer temperatures
+    blScr_t: float
+    groPipe_t: float
+    lamp_t: float
+    intLamp_t: float
     air_CO2: float  # CO2 in greenhouse air
     above_thermal_screen_CO2: float  # CO2 in top compartment air
+    air_vapor_pressure: float
+    top_vapor_pressure: float
     # Recheck these vars
     leaf_area_index: float
     mechcool_t: float  # Mechanical cooling system temperature

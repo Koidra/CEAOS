@@ -1,5 +1,3 @@
-from math import inf
-
 """
 These coefficients are imported from Table 8.1 in Vanthoor's thesis and from GreenLight code
 NOTE: In the GreenLight model, there are no whitewash and shadow screen
@@ -104,12 +102,41 @@ class Coefficients(object):
 
     class Lamp:
         # No lamps
-        lamp_capacity = 0  # Maximum intensity of lamps
-        eta_LampPAR = 0  # fraction of lamp input converted to PAR
-        eta_LampNIR = 0  # fraction of lamp input converted to NIR
+        heat_capacity_lamp = 100  # Maximum heat capacity of lamps  [J K^-1 m^-2]
+        electrical_capacity_lamp = 110  # electrical capacity of the lamps [W m-2]
+        A_Lamp = 0.03  # surface area of the lamps per area of greenhouse floor [m m-2]
+        lamp_NIR_reflection_coef = 0  # The NIR reflection coefficient of the vertical layer of the lamps
+        lamp_PAR_reflection_coef = 0  # The PAR reflection coefficient of the vertical layer of the lamps
+        lamp_FIR_reflection_coef = 0  # The FIR reflection coefficient of the vertical layer of the lamps
+        lamp_NIR_transmission_coef = 0.97  # The NIR transmission coefficient of the vertical layer of the lamps
+        lamp_PAR_transmission_coef = 0.97  # The PAR transmission coefficient of the vertical layer of the lamps
+        lamp_FIR_transmission_coef = 0.97  # FIR transmission coefficient of the vertical layer of the lamps
+        lamp_electrical_input_PAR_conversion = 0.36  # the conversion rate from electrical input to PAR output of the lamp
+        lamp_electrical_input_NIR_conversion = 0.22  # the conversion rate from electrical input to NIR output of the lamp
+        lamp_photons_per_joule = 5  # the amount of photons per joule within the PAR output of the lamps, which depends on the lamps' spectral output
+        top_lamp_emission = 0.1  # the emissivity of the lamps towards the top
+        bottom_lamp_emission = 0.9  # the emissivity of the lamps towards the bottom
+        lamp_cool_energy = 0  # the amount of energy exported from the lamps by active cooling and removed from the greenhouse, expressed as a fraction of the electrical input [-]
+        c_HEC_LampAir = 0.09  # the heat exchange coefficient between the lamps and the surrounding air [W K-1 m-2]
 
     class Interlight:
         # No lamps
-        inter_lamp_capacity = 0  # Maximum intensity of lamps
-        eta_IntLampPAR = 0  # fraction of lamp input converted to PAR
-        eta_IntLampNIR = 0  # fraction of lamp input converted to NIR
+        electrical_capacity_inter_lamp = 0  # electrical capacity of the lamps [W m-2]
+        A_Inter_lamp = 0  # surface area of the lamps per area of greenhouse floor [m2 m-2]
+        inter_lamp_electrical_input_PAR_conversion = 0  # fraction of lamp input converted to PAR [J(PAR) J-1 {electricity}]
+        inter_lamp_electrical_input_NIR_conversion = 0  # fraction of lamp input converted to NIR [J(NIR) J-1 {electricity}]
+        inter_lamp_photons_per_joule = 0  # the amount of photons per joule within the PAR output of the lamps, which depends on the lamps' spectral output [micro-mol{PAR} J-1 {PAR}]
+        inter_lamp_emission = 0  # the emissivity of the lamps towards the top [-]
+        heat_inter_lamp_capacity = 0  # heat capacity of lamps [J K^-1 m^-2]
+        c_HEC_InterLampAir = 0  # the heat exchange coefficient between the lamps and the surrounding air [W K-1 m-2]
+
+    class Blackoutscreen:
+        blScr_PAR_transmission_coef = 0.01
+        blScr_PAR_reflection_coef = 0.35
+        blScr_FIR_emission_coef = 0.67  # FIR emissions coefficient of the blackout screen
+
+    class GrowPipe:
+        phi_external_pipe = 0.035  # External diameter of the grow pipes [m]
+        phi_internal_pipe = 0.0338  # Internal diameter of the grow pipes [m]
+        pipe_length = 1.655  # Length of the grow pipes per square meter greenhouse floor [m m-2]
+        groPipe_FIR_emission_coef = 0  # FIR emissions coefficient of the blackout screen
