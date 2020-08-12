@@ -46,10 +46,9 @@ def mechanical_cooling_to_greenhouse_air_heat_exchange_coefficient(setpoints: Se
     floor_area = Coefficients.Construction.floor_area
     air_t = states.air_t
     mechcool_t = states.mechcool_t
-    air_vp = saturation_vapor_pressure(air_t)
     MechCool_vp = saturation_vapor_pressure(mechcool_t)
     return (U_MechCool * perf_MechCool_coef * ele_cap_MechCool / floor_area) / \
-           (air_t - mechcool_t + 6.5E-9 * EVAPORATION_LATENT_HEAT * (air_vp - MechCool_vp))
+           (air_t - mechcool_t + 6.5E-9 * EVAPORATION_LATENT_HEAT * (states.air_vapor_pressure - MechCool_vp))
 
 
 def roof_ventilation_natural_ventilation_rate(setpoints: Setpoints, states: States, weather: Weather):

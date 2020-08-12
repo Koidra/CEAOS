@@ -4,11 +4,11 @@ Note:
     FIR: Far infrared radiation
     NIR: Near infrared radiation
 """
-from climate.equations.electrical_input import lamp_electrical_input
-from climate.equations.heat_fluxes import *
-from climate.equations.lumped_cover_layers import *
+from climate.electrical_input import lamp_electrical_input
+from climate.heat_fluxes import *
+from climate.lumped_cover_layers import *
 from constants import *
-from data_models import States
+from data_models import States, Weather
 
 
 def canopy_PAR_absorbed(states: States, setpoints: Setpoints, weather: Weather):
@@ -272,26 +272,52 @@ def FIR_from_inter_lamp_to_canopy(states: States):
 
 
 def floor_PAR_absorbed_from_lamp(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+    """
+    Equation A21 [2]
+    Args:
+        states:
+        setpoints:
+        weather:
+
+    Returns: PAR from the lamps absorbed by the floor [W m^{-2}]
+    """
+    radiation_flux_PARGh_Lamp = PAR_above_canopy_from_lamp(setpoints)
+
+    return (1-Coefficients.Floor.floor_PAR_reflection_coefficient) \
+           * math.exp(-CANOPY_PAR_EXTINCTION_COEF * states.leaf_area_index)\
+           * radiation_flux_PARGh_Lamp
 
 
-def floor_NIR_absorbed_from_lamp(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+def floor_NIR_absorbed_from_lamp(states: States, setpoints: Setpoints):
+    """
+    Equation A22 [5]
+    Args:
+        states:
+        setpoints:
+
+    Returns: NIR from the lamps absorbed by the floor [W m^{-2}]
+    """
+    electrical_input_lamp = lamp_electrical_input(setpoints)
+    return (1 - Coefficients.Floor.floor_NIR_reflection_coefficient) \
+           * math.exp(-CANOPY_NIR_EXTINCTION_COEF * states.leaf_area_index) \
+           * Coefficients.Lamp.lamp_electrical_input_NIR_conversion * electrical_input_lamp
 
 
-def FIR_from_lamp_to_floor(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+def FIR_from_lamp_to_floor(states: States):
+    F_LampFlr = (1 - 0.49 * math.pi * Coefficients.Heating.pipe_length * Coefficients.Heating.phi_external_pipe) \
+                * math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
+    return net_far_infrared_radiation_fluxes(Coefficients.Lamp.A_Lamp,
+                                             Coefficients.Lamp.bottom_lamp_emission,
+                                             Coefficients.Floor.floor_FIR_emission_coefficient,
+                                             F_LampFlr, states.lamp_t, states.floor_t)
 
 
 def FIR_from_pipe_to_canopy(states: States):
-    pipe_length = Coefficients.Heating.pipe_length
-    phi_external_pipe = Coefficients.Heating.phi_external_pipe
-    A_Pipe = math.pi * pipe_length * phi_external_pipe
-    pipe_FIR_emission_coef = Coefficients.Heating.pipe_FIR_emission_coefficient
-    canopy_FIR_emission_coef = CANOPY_FIR_EMISSION_COEF
+    A_Pipe = math.pi * Coefficients.Heating.pipe_length * Coefficients.Heating.phi_external_pipe
     F_PipeCanopy = 0.49 * (1 - math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index))
-    return net_far_infrared_radiation_fluxes(A_Pipe, pipe_FIR_emission_coef, canopy_FIR_emission_coef, F_PipeCanopy,
-                                             states.pipe_t, states.canopy_t)
+    return net_far_infrared_radiation_fluxes(A_Pipe,
+                                             Coefficients.Heating.pipe_FIR_emission_coefficient, CANOPY_FIR_EMISSION_COEF,
+                                             F_PipeCanopy, states.pipe_t, states.canopy_t)
 
 
 def FIR_from_canopy_to_internal_cover(states: States, setpoints: Setpoints):
@@ -318,9 +344,9 @@ def FIR_from_canopy_to_floor(states: States):
     pipe_length = Coefficients.Heating.pipe_length
     phi_external_pipe = Coefficients.Heating.phi_external_pipe
     A_Canopy = 1 - math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
-    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
     F_CanopyFlr = 1 - 0.49 * math.pi * pipe_length * phi_external_pipe
-    return net_far_infrared_radiation_fluxes(A_Canopy, CANOPY_FIR_EMISSION_COEF, floor_FIR_emission_coefficient, F_CanopyFlr,
+    return net_far_infrared_radiation_fluxes(A_Canopy, CANOPY_FIR_EMISSION_COEF,
+                                             Coefficients.Floor.floor_FIR_emission_coefficient, F_CanopyFlr,
                                              states.canopy_t, states.floor_t)
 
 
@@ -341,29 +367,26 @@ def FIR_from_canopy_to_sky(states: States, setpoints: Setpoints, weather: Weathe
 
 
 def FIR_from_canopy_to_thermal_screen(states: States, setpoints: Setpoints):
-    thScr_FIR_emission_coefficient = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
     F_CanopyThScr = setpoints.U_ThScr
     A_Canopy = 1 - math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
-    return net_far_infrared_radiation_fluxes(A_Canopy, CANOPY_FIR_EMISSION_COEF, thScr_FIR_emission_coefficient, F_CanopyThScr,
-                                             states.canopy_t, states.thermal_screen_t)
+    return net_far_infrared_radiation_fluxes(A_Canopy,
+                                             CANOPY_FIR_EMISSION_COEF, Coefficients.Thermalscreen.thScr_FIR_emission_coefficient,
+                                             F_CanopyThScr, states.canopy_t, states.thermal_screen_t)
 
 
 def FIR_from_heating_pipe_to_floor(states: States):
-    pipe_length = Coefficients.Heating.pipe_length
-    phi_external_pipe = Coefficients.Heating.phi_external_pipe
-    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
-    pipe_FIR_emission_coefficient = Coefficients.Heating.pipe_FIR_emission_coefficient
-    A_Pipe = math.pi * pipe_length * phi_external_pipe
+    A_Pipe = math.pi * Coefficients.Heating.pipe_length * Coefficients.Heating.phi_external_pipe
     F_PipeFlr = 0.49
-    return net_far_infrared_radiation_fluxes(A_Pipe, pipe_FIR_emission_coefficient, floor_FIR_emission_coefficient, F_PipeFlr,
-                                             states.pipe_t, states.floor_t)
+    return net_far_infrared_radiation_fluxes(A_Pipe,
+                                             Coefficients.Heating.pipe_FIR_emission_coefficient,
+                                             Coefficients.Floor.floor_FIR_emission_coefficient,
+                                             F_PipeFlr, states.pipe_t, states.floor_t)
 
 
 def FIR_from_floor_to_internal_cover(states: States, setpoints: Setpoints):
     A_Flr = 1
     pipe_length = Coefficients.Heating.pipe_length
     phi_external_pipe = Coefficients.Heating.phi_external_pipe
-    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
     shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
     roof_FIR_transmission_coefficient = Coefficients.Roof.roof_FIR_transmission_coefficient
@@ -377,17 +400,18 @@ def FIR_from_floor_to_internal_cover(states: States, setpoints: Setpoints):
                                                                                  roof_FIR_reflection_coefficient)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - cover_FIR_transmission_coefficient - cover_FIR_reflection_coefficient  # = a_CovFIR, line 271 / setGlAux
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
-    F_FlrCov_in = tau_U_ThScrFIR * (1 - 0.49 * math.pi * pipe_length * phi_external_pipe) * math.exp(
-        -CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
-    return net_far_infrared_radiation_fluxes(A_Flr, floor_FIR_emission_coefficient, epsilon_Cov, F_FlrCov_in,
-                                             states.floor_t, states.internal_cov_t)
+    F_FlrCov_in = tau_U_ThScrFIR * (1 - 0.49 * math.pi * pipe_length * phi_external_pipe) \
+                  * math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
+    return net_far_infrared_radiation_fluxes(A_Flr,
+                                             Coefficients.Floor.floor_FIR_emission_coefficient,
+                                             epsilon_Cov,
+                                             F_FlrCov_in, states.floor_t, states.internal_cov_t)
 
 
 def FIR_from_floor_to_sky(states: States, setpoints: Setpoints, weather: Weather):
     A_Flr = 1
     pipe_length = Coefficients.Heating.pipe_length
     phi_external_pipe = Coefficients.Heating.phi_external_pipe
-    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
     shScr_FIR_transmission_coefficient = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coefficient = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
@@ -400,30 +424,30 @@ def FIR_from_floor_to_sky(states: States, setpoints: Setpoints, weather: Weather
 
     F_FlrSky = tau_CovFIR * tau_U_ThScrFIR * (1 - 0.49 * math.pi * pipe_length * phi_external_pipe) * \
                math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
-    return net_far_infrared_radiation_fluxes(A_Flr, floor_FIR_emission_coefficient, SKY_FIR_EMISSION_COEF, F_FlrSky,
-                                             states.floor_t, weather.sky_t)
+    return net_far_infrared_radiation_fluxes(A_Flr,
+                                             Coefficients.Floor.floor_FIR_emission_coefficient,
+                                             SKY_FIR_EMISSION_COEF,
+                                             F_FlrSky, states.floor_t, weather.sky_t)
 
 
 def FIR_from_floor_to_thermal_screen(states: States, setpoints: Setpoints):
     A_Flr = 1
     pipe_length = Coefficients.Heating.pipe_length
     phi_external_pipe = Coefficients.Heating.phi_external_pipe
-    floor_FIR_emission_coefficient = Coefficients.Floor.floor_FIR_emission_coefficient
-    thScr_FIR_emission_coefficient = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
     F_FlrThScr = setpoints.U_ThScr * (1 - 0.49 * math.pi * pipe_length * phi_external_pipe) * \
                  math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
-    return net_far_infrared_radiation_fluxes(A_Flr, floor_FIR_emission_coefficient, thScr_FIR_emission_coefficient, F_FlrThScr,
+    return net_far_infrared_radiation_fluxes(A_Flr,
+                                             Coefficients.Floor.floor_FIR_emission_coefficient,
+                                             Coefficients.Thermalscreen.thScr_FIR_emission_coefficient, F_FlrThScr,
                                              states.floor_t, states.thermal_screen_t)
 
 
 def FIR_from_heating_pipe_to_thermal_screen(states: States, setpoints: Setpoints):
-    pipe_length = Coefficients.Heating.pipe_length
-    phi_external_pipe = Coefficients.Heating.phi_external_pipe
-    A_Pipe = math.pi * pipe_length * phi_external_pipe
-    pipe_FIR_emission_coefficient = Coefficients.Heating.pipe_FIR_emission_coefficient
-    thScr_FIR_emission_coefficient = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
+    A_Pipe = math.pi * Coefficients.Heating.pipe_length * Coefficients.Heating.phi_external_pipe
     F_PipeThScr = setpoints.U_ThScr * 0.49 * math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
-    return net_far_infrared_radiation_fluxes(A_Pipe, pipe_FIR_emission_coefficient, thScr_FIR_emission_coefficient, F_PipeThScr,
+    return net_far_infrared_radiation_fluxes(A_Pipe,
+                                             Coefficients.Heating.pipe_FIR_emission_coefficient,
+                                             Coefficients.Thermalscreen.thScr_FIR_emission_coefficient, F_PipeThScr,
                                              states.pipe_t, states.thermal_screen_t)
 
 
@@ -441,15 +465,14 @@ def FIR_from_thermal_screen_to_internal_cover(states: States, setpoints: Setpoin
                                                                           shScr_FIR_reflection_coef,
                                                                           roof_FIR_reflection_coef)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - cover_FIR_transmission_coef - cover_FIR_reflection_coef  # = a_CovFIR, line 271 / setGlAux
-    thScr_FIR_emission_coef = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
     F_ThScrCov_in = setpoints.U_ThScr
-    return net_far_infrared_radiation_fluxes(A_ThScr, thScr_FIR_emission_coef, epsilon_Cov, F_ThScrCov_in,
-                                             states.thermal_screen_t, states.internal_cov_t)
+    return net_far_infrared_radiation_fluxes(A_ThScr,
+                                             Coefficients.Thermalscreen.thScr_FIR_emission_coefficient, epsilon_Cov,
+                                             F_ThScrCov_in, states.thermal_screen_t, states.internal_cov_t)
 
 
 def FIR_from_thermal_screen_to_sky(states: States, setpoints: Setpoints, weather: Weather):
     A_ThScr = 1
-    thScr_FIR_emission_coef = Coefficients.Thermalscreen.thScr_FIR_emission_coefficient
     shScr_FIR_transmission_coef = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coef = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
     roof_FIR_transmission_coef = Coefficients.Roof.roof_FIR_transmission_coefficient
@@ -459,13 +482,13 @@ def FIR_from_thermal_screen_to_sky(states: States, setpoints: Setpoints, weather
                                                                               shScr_FIR_reflection_coef,
                                                                               roof_FIR_reflection_coef)  # line 255 / setGlAux / GreenLight
     F_ThScrSky = cover_FIR_transmission_coef * setpoints.U_ThScr
-    return net_far_infrared_radiation_fluxes(A_ThScr, thScr_FIR_emission_coef, SKY_FIR_EMISSION_COEF, F_ThScrSky,
+    return net_far_infrared_radiation_fluxes(A_ThScr,
+                                             Coefficients.Thermalscreen.thScr_FIR_emission_coefficient,
+                                             SKY_FIR_EMISSION_COEF, F_ThScrSky,
                                              states.thermal_screen_t, weather.sky_t)
 
 
 def FIR_from_heating_pipe_to_internal_cover(states: States, setpoints: Setpoints):
-    pipe_length = Coefficients.Heating.pipe_length
-    phi_external_pipe = Coefficients.Heating.phi_external_pipe
     shScr_FIR_transmission_coef = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coef = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
     roof_FIR_transmission_coef = Coefficients.Roof.roof_FIR_transmission_coefficient
@@ -478,15 +501,15 @@ def FIR_from_heating_pipe_to_internal_cover(states: States, setpoints: Setpoints
                                                                           shScr_FIR_reflection_coef,
                                                                           roof_FIR_reflection_coef)  # line 260 / setGlAux / GreenLight
     epsilon_Cov = 1 - cover_FIR_transmission_coef - cover_FIR_reflection_coef  # = a_CovFIR, line 271 / setGlAux
-    A_Pipe = math.pi * pipe_length * phi_external_pipe
-    pipe_FIR_emission_coef = Coefficients.Heating.pipe_FIR_emission_coefficient
+    A_Pipe = math.pi * Coefficients.Heating.pipe_length * Coefficients.Heating.phi_external_pipe
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
     F_PipeCov_in = tau_U_ThScrFIR * 0.49 * math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
-    return net_far_infrared_radiation_fluxes(A_Pipe, pipe_FIR_emission_coef, epsilon_Cov, F_PipeCov_in,
-                                             states.pipe_t, states.internal_cov_t)
+    return net_far_infrared_radiation_fluxes(A_Pipe,
+                                             Coefficients.Heating.pipe_FIR_emission_coefficient, epsilon_Cov,
+                                             F_PipeCov_in, states.pipe_t, states.internal_cov_t)
 
 
-def cover_global_radiation(states: States, setpoints: Setpoints, weather: Weather):
+def cover_global_radiation(setpoints: Setpoints, weather: Weather):
     # Equation 8.37
     # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
     shScr_PAR_transmission_coef = Coefficients.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
@@ -551,10 +574,7 @@ def FIR_from_external_cover_to_sky(states: States, weather: Weather):
 
 
 def FIR_from_heating_pipe_to_sky(states: States, setpoints: Setpoints, weather: Weather):
-    pipe_length = Coefficients.Heating.pipe_length
-    phi_external_pipe = Coefficients.Heating.phi_external_pipe
-    A_Pipe = math.pi * pipe_length * phi_external_pipe
-    pipe_FIR_emission_coef = Coefficients.Heating.pipe_FIR_emission_coefficient
+    A_Pipe = math.pi * Coefficients.Heating.pipe_length * Coefficients.Heating.phi_external_pipe
     shScr_FIR_transmission_coef = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
     shScr_FIR_reflection_coef = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
     roof_FIR_transmission_coef = Coefficients.Roof.roof_FIR_transmission_coefficient
@@ -565,13 +585,14 @@ def FIR_from_heating_pipe_to_sky(states: States, setpoints: Setpoints, weather: 
                                                                               roof_FIR_reflection_coef)  # line 255 / setGlAux / GreenLight
 
     tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
-    F_PipeSky = cover_FIR_transmission_coef * tau_U_ThScrFIR * 0.49 * \
-                math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
-    return net_far_infrared_radiation_fluxes(A_Pipe, pipe_FIR_emission_coef, SKY_FIR_EMISSION_COEF, F_PipeSky,
-                                             states.pipe_t, weather.sky_t)
+    F_PipeSky = cover_FIR_transmission_coef * tau_U_ThScrFIR * 0.49 \
+                * math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
+    return net_far_infrared_radiation_fluxes(A_Pipe,
+                                             Coefficients.Heating.pipe_FIR_emission_coefficient, SKY_FIR_EMISSION_COEF,
+                                             F_PipeSky, states.pipe_t, weather.sky_t)
 
 
-def FIR_from_canopy_to_blackscreen(states: States, setpoints: Setpoints):
+def FIR_from_canopy_to_blackout_screen(states: States, setpoints: Setpoints):
     A_Canopy = 1 - math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
     F_CanopyBlScr = Coefficients.Lamp.lamp_FIR_transmission_coef * setpoints.U_BlScr
 
@@ -582,40 +603,129 @@ def FIR_from_canopy_to_blackscreen(states: States, setpoints: Setpoints):
 
 def FIR_from_grow_pipe_to_canopy(states: States):
     A_GroPipe = math.pi * Coefficients.GrowPipe.pipe_length * Coefficients.GrowPipe.phi_external_pipe  # Surface area of pipes for floor area
+    F_GroPipeCanopy = 1
     return net_far_infrared_radiation_fluxes(A_GroPipe, Coefficients.GrowPipe.groPipe_FIR_emission_coef,
-                                             CANOPY_FIR_EMISSION_COEF, 1, states.groPipe_t, states.canopy_t)
+                                             CANOPY_FIR_EMISSION_COEF, F_GroPipeCanopy, states.groPipe_t, states.canopy_t)
 
 
-def FIR_from_floor_to_black_screen(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+def FIR_from_floor_to_blackout_screen(states: States, setpoints: Setpoints):
+    A_Flr = 1
+    F_FloorBlScr = Coefficients.Lamp.lamp_FIR_transmission_coef * setpoints.U_BlScr * (1 - 0.49 * math.pi * Coefficients.Heating.pipe_length * Coefficients.Heating.phi_external_pipe) * math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
+    return net_far_infrared_radiation_fluxes(A_Flr,
+                                             Coefficients.Floor.floor_FIR_emission_coefficient,
+                                             Coefficients.Blackoutscreen.blScr_FIR_emission_coef,
+                                             F_FloorBlScr, states.floor_t, states.blScr_t)
 
 
-def FIR_from_black_screen_to_thermal_screen(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+def FIR_from_blackout_screen_to_thermal_screen(states: States, setpoints: Setpoints):
+    A_BlScr = setpoints.U_BlScr
+    F_BlScrThScr = setpoints.U_ThScr
+    return net_far_infrared_radiation_fluxes(A_BlScr, Coefficients.Blackoutscreen.blScr_FIR_emission_coef,
+                                             Coefficients.Thermalscreen.thScr_FIR_emission_coefficient,
+                                             F_BlScrThScr, states.blScr_t, states.thermal_screen_t)
 
 
-def FIR_from_lamp_to_thermal_screen(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+def FIR_from_lamp_to_thermal_screen(states: States, setpoints: Setpoints):
+    blScr_FIR_transmission_coef = 1 - setpoints.U_BlScr * (1 - Coefficients.Blackoutscreen.blScr_PAR_transmission_coef)
+    F_LampThScr = setpoints.U_ThScr * blScr_FIR_transmission_coef
+    return net_far_infrared_radiation_fluxes(Coefficients.Lamp.A_Lamp, Coefficients.Lamp.top_lamp_emission,
+                                             Coefficients.Thermalscreen.thScr_FIR_emission_coefficient,
+                                             F_LampThScr, states.lamp_t, states.thermal_screen_t)
 
 
-def FIR_from_black_screen_to_internal_cover(states: States, setpoints: Setpoints):
-    raise NotImplemented
+def FIR_from_blackout_screen_to_internal_cover(states: States, setpoints: Setpoints):
+    shScr_FIR_transmission_coef = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coef = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coef = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coef = Coefficients.Roof.roof_FIR_reflection_coefficient
+    cover_FIR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coef,
+                                                                              roof_FIR_transmission_coef,
+                                                                              shScr_FIR_reflection_coef,
+                                                                              roof_FIR_reflection_coef)  # line 255 / setGlAux / GreenLight
+    cover_FIR_reflection_coef = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coef,
+                                                                          shScr_FIR_reflection_coef,
+                                                                          roof_FIR_reflection_coef)  # line 260 / setGlAux / GreenLight
+    epsilon_Cov = 1 - cover_FIR_transmission_coef - cover_FIR_reflection_coef  # = a_CovFIR, line 271 / setGlAux
+    F_BlScrCov_in = setpoints.U_BlScr*thermal_screen_FIR_transmission_coefficient(setpoints)
+    return net_far_infrared_radiation_fluxes(1, Coefficients.Blackoutscreen.blScr_FIR_emission_coef, epsilon_Cov,
+                                             F_BlScrCov_in, states.blScr_t, states.internal_cov_t)
 
 
 def FIR_from_lamp_to_internal_cover(states: States, setpoints: Setpoints):
-    raise NotImplemented
+    shScr_FIR_transmission_coef = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coef = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coef = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coef = Coefficients.Roof.roof_FIR_reflection_coefficient
+    cover_FIR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coef,
+                                                                              roof_FIR_transmission_coef,
+                                                                              shScr_FIR_reflection_coef,
+                                                                              roof_FIR_reflection_coef)  # line 255 / setGlAux / GreenLight
+    cover_FIR_reflection_coef = double_layer_cover_reflection_coefficient(shScr_FIR_transmission_coef,
+                                                                          shScr_FIR_reflection_coef,
+                                                                          roof_FIR_reflection_coef)  # line 260 / setGlAux / GreenLight
+    epsilon_Cov = 1 - cover_FIR_transmission_coef - cover_FIR_reflection_coef  # = a_CovFIR, line 271 / setGlAux
+    F_LampCov_in = thermal_screen_FIR_transmission_coefficient(setpoints).blackout_screen_FIR_transmission_coefficient(setpoints)
+    return net_far_infrared_radiation_fluxes(Coefficients.Lamp.A_Lamp, Coefficients.Lamp.top_lamp_emission, epsilon_Cov,
+                                             F_LampCov_in, states.lamp_t, states.internal_cov_t)
 
 
-def FIR_from_heating_pipe_to_black_screen(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+def FIR_from_heating_pipe_to_blackout_screen(states: States, setpoints: Setpoints):
+    A_Pipe = math.pi * Coefficients.Heating.pipe_length * Coefficients.Heating.phi_external_pipe
+    F_PipeBlScr = Coefficients.Lamp.lamp_FIR_transmission_coef * setpoints.U_BlScr * 0.49 \
+                  * math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
+    return net_far_infrared_radiation_fluxes(A_Pipe, Coefficients.Heating.pipe_FIR_emission_coefficient,
+                                             Coefficients.Blackoutscreen.blScr_FIR_emission_coef,
+                                             F_PipeBlScr, states.pipe_t, states.blScr_t)
 
 
-def FIR_from_lamp_to_heating_pipe(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+def FIR_from_lamp_to_heating_pipe(states: States):
+    F_LampPipe = 0.49*math.pi*Coefficients.Heating.pipe_length*Coefficients.Heating.phi_external_pipe \
+                 * math.exp(-CANOPY_FIR_EXTINCTION_COEF * states.leaf_area_index)
+    return net_far_infrared_radiation_fluxes(Coefficients.Lamp.A_Lamp,
+                                             Coefficients.Lamp.bottom_lamp_emission,
+                                             Coefficients.Heating.pipe_FIR_emission_coefficient,
+                                             F_LampPipe, states.lamp_t, states.pipe_t)
 
 
 def FIR_from_lamp_to_sky(states: States, setpoints: Setpoints, weather: Weather):
-    raise NotImplemented
+    shScr_FIR_transmission_coef = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coef = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coef = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coef = Coefficients.Roof.roof_FIR_reflection_coefficient
+    cover_FIR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coef,
+                                                                              roof_FIR_transmission_coef,
+                                                                              shScr_FIR_reflection_coef,
+                                                                              roof_FIR_reflection_coef)  # line 255 / setGlAux / GreenLight
+    F_LampSky = cover_FIR_transmission_coef\
+                * thermal_screen_FIR_transmission_coefficient(setpoints)\
+                * blackout_screen_FIR_transmission_coefficient(setpoints)
+    return net_far_infrared_radiation_fluxes(Coefficients.Lamp.A_Lamp,
+                                             Coefficients.Lamp.top_lamp_emission, SKY_FIR_EMISSION_COEF,
+                                             F_LampSky, states.lamp_t, weather.sky_t)
+
+
+def FIR_from_blackout_screen_to_sky(states: States, setpoints: Setpoints, weather: Weather):
+    tau_U_ThScrFIR = thermal_screen_FIR_transmission_coefficient(setpoints)
+    shScr_FIR_transmission_coef = Coefficients.Shadowscreen.shScr_FIR_transmission_coefficient
+    shScr_FIR_reflection_coef = Coefficients.Shadowscreen.shScr_FIR_reflection_coefficient
+    roof_FIR_transmission_coef = Coefficients.Roof.roof_FIR_transmission_coefficient
+    roof_FIR_reflection_coef = Coefficients.Roof.roof_FIR_reflection_coefficient
+    cover_FIR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_FIR_transmission_coef,
+                                                                              roof_FIR_transmission_coef,
+                                                                              shScr_FIR_reflection_coef,
+                                                                              roof_FIR_reflection_coef)  # line 255 / setGlAux / GreenLight
+    F_BlScrSky = cover_FIR_transmission_coef*setpoints.U_BlScr*tau_U_ThScrFIR
+    return net_far_infrared_radiation_fluxes(1, Coefficients.Blackoutscreen.blScr_FIR_emission_coef,
+                                             SKY_FIR_EMISSION_COEF,
+                                             F_BlScrSky, states.blScr_t, weather.sky_t)
+
+
+def FIR_from_lamp_to_blackout_screen(states: States, setpoints: Setpoints):
+    F_LampBlScr = setpoints.U_BlScr
+    return net_far_infrared_radiation_fluxes(Coefficients.Lamp.A_Lamp,
+                                             Coefficients.Lamp.top_lamp_emission,
+                                             Coefficients.Blackoutscreen.blScr_FIR_emission_coef,
+                                             F_LampBlScr, states.lamp_t, states.blScr_t)
 
 
 def net_far_infrared_radiation_fluxes(A_i, ep_i, ep_j, F_ij, object_i_t, object_j_t) -> float:

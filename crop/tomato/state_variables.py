@@ -14,7 +14,7 @@ def buffer_carbohydrates_amount(crop_inputs: TomatoModel, climate_inputs: States
     carbohydrate_flow_AirBuf = net_photosynthesis_rate(crop_inputs.carbohydrate_amount_Buf,
                                                        crop_inputs.carbohydrate_amount_Leaf,
                                                        weather_inputs.outdoor_global_rad,
-                                                       climate_inputs.air_CO2, climate_inputs.canopy_t)
+                                                       climate_inputs.air_co2, climate_inputs.canopy_t)
     carbohydrate_flow_BufFruit = carbohydrate_flow_from_buffer_to_fruits(crop_inputs.carbohydrate_amount_Buf,
                                                                          climate_inputs.canopy_t,
                                                                          crop_inputs.sum_canopy_t,

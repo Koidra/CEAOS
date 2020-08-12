@@ -9,7 +9,7 @@ class Setpoints(NamedTuple):
     U_Roof: float  # Control of the roof ventilators
     U_Side: float  # Control of the side ventilators
     U_VentForced: float  # Control of the forced ventilation
-    U_ExtCO2: float  # Control of the CO2-input from an external source
+    U_Extco2: float  # Control of the CO2-input from an external source
     U_ShScr: float  # Control of the external shading screen
     U_ThScr: float  # Control of the thermal screen
     U_Ind: float  # Control of the heat input from industry
@@ -34,14 +34,14 @@ class States(NamedTuple):
     groPipe_t: float
     lamp_t: float
     intLamp_t: float
-    air_CO2: float  # CO2 in greenhouse air
-    above_thermal_screen_CO2: float  # CO2 in top compartment air
+    air_co2: float  # CO2 in greenhouse air
+    above_thermal_screen_co2: float  # CO2 in top compartment air
     air_vapor_pressure: float
-    top_vapor_pressure: float
+    above_thermal_screen_vapor_pressure: float
     # Recheck these vars
     leaf_area_index: float
     mechcool_t: float  # Mechanical cooling system temperature
-    mass_CO2_flux_AirCanopy: float  # CO2 flux from greenhouse air to canopy
+    mass_co2_flux_AirCanopy: float  # CO2 flux from greenhouse air to canopy
 
 
 class Weather(NamedTuple):
@@ -49,6 +49,6 @@ class Weather(NamedTuple):
     outdoor_t: float  # outdoor temperature
     sky_t: float  # sky temperature
     soil_out_t: float  # deep out soil temperature
-    outdoor_CO2: float  # outdoor CO2
+    outdoor_co2: float  # outdoor CO2
     outdoor_vp: float  # outdoor vapor pressure
     v_Wind: float  # wind velocity

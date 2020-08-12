@@ -4,10 +4,11 @@ Based on section 8.6
 """
 
 # 8.6.1 Global, PAR and NIR heat fluxes
-from climate.equations.canopy_transpiration import canopy_transpiration
-from climate.equations.radiation_fluxes import *
-from climate.equations.utils import *
-from climate.equations.vapor_fluxes import fogging_system_to_greenhouse_air_latent_vapor_flux, differentiable_air_to_obj_vapor_flux
+from climate.canopy_transpiration import *
+from climate.electrical_input import lamp_electrical_input
+from climate.radiation_fluxes import *
+from climate.utils import *
+from climate.vapor_fluxes import fogging_system_to_greenhouse_air_latent_vapor_flux, differentiable_air_to_obj_vapor_flux
 from constants import *
 
 
@@ -120,7 +121,7 @@ def lamp_radiation(states, setpoints, weather):
     radiation_flux_PAR_LampCanopy = canopy_PAR_absorbed_from_lamp(states, setpoints)
     radiation_flux_NIR_LampCanopy = canopy_NIR_absorbed_from_lamp(states, setpoints)
     radiation_flux_PAR_LampFlr = floor_PAR_absorbed_from_lamp(states, setpoints, weather)
-    radiation_flux_NIR_LampFlr = floor_NIR_absorbed_from_lamp(states, setpoints, weather)
+    radiation_flux_NIR_LampFlr = floor_NIR_absorbed_from_lamp(states, setpoints)
 
     return (Coefficients.Lamp.lamp_electrical_input_PAR_conversion + Coefficients.Lamp.lamp_electrical_input_NIR_conversion) * electrical_input_lamp \
            - radiation_flux_PAR_LampCanopy - radiation_flux_NIR_LampCanopy - radiation_flux_PAR_LampFlr - radiation_flux_NIR_LampFlr
@@ -128,9 +129,11 @@ def lamp_radiation(states, setpoints, weather):
 
 def thermal_screen_FIR_transmission_coefficient(setpoints: Setpoints):
     # Equation 8.39
-    U_ThScr = setpoints.U_ThScr
-    thScr_FIR_transmission_coef = Coefficients.Thermalscreen.thScr_FIR_transmission_coefficient
-    return 1 - U_ThScr * (1 - thScr_FIR_transmission_coef)
+    return 1 - setpoints.U_ThScr * (1 - Coefficients.Thermalscreen.thScr_FIR_transmission_coefficient)
+
+
+def blackout_screen_FIR_transmission_coefficient(setpoints: Setpoints):
+    return 1 - setpoints.U_BlScr * (1 - Coefficients.Blackoutscreen.blScr_FIR_transmission_coef)
 
 
 # 8.6.3 Convection and conduction
@@ -171,25 +174,20 @@ def sensible_heat_flux_between_mechanical_cooling_and_greenhouse_air(setpoints: 
 
 
 def sensible_heat_flux_between_heating_pipe_and_greenhouse_air(states: States):
-    pipe_length = Coefficients.Heating.pipe_length
-    phi_external_pipe = Coefficients.Heating.phi_external_pipe
-    HEC_PipeAir = 1.99 * math.pi * phi_external_pipe * pipe_length * abs(pipe_t - air_t) ** 0.32
+    HEC_PipeAir = 1.99 * math.pi * Coefficients.Heating.phi_external_pipe * Coefficients.Heating.pipe_length \
+                  * abs(states.pipe_t - states.air_t) ** 0.32
     return convective_and_conductive_heat_fluxes(HEC_PipeAir, states.pipe_t, states.air_t)
 
 
 def sensible_heat_flux_between_direct_air_heater_and_greenhouse_air(setpoints: Setpoints):
     # Equation 8.53
-    U_Blow = setpoints.U_Blow
-    heat_cap_Blow = Coefficients.ActiveClimateControl.heat_cap_Blow
-    floor_area = Coefficients.Construction.floor_area
-    return U_Blow * heat_cap_Blow / floor_area
+    return setpoints.U_Blow * Coefficients.ActiveClimateControl.heat_cap_Blow / Coefficients.Construction.floor_area
 
 
 def sensible_heat_flux_between_buffer_and_greenhouse_air(states: States):
     # Equation 8.57
-    HEC_PasAir = Coefficients.ActiveClimateControl.HEC_PasAir
     soil_3_t = states.soil_j_t[2]  # third layer
-    return HEC_PasAir * (soil_3_t - states.air_t)
+    return Coefficients.ActiveClimateControl.HEC_PasAir * (soil_3_t - states.air_t)
 
 
 def sensible_heat_flux_between_floor_and_greenhouse_air(states: States):
@@ -240,12 +238,10 @@ def sensible_heat_flux_between_floor_and_first_layer_soil(states: States):
 
 
 def latent_heat_flux_between_greenhouse_air_and_thermal_screen(states: States, setpoints: Setpoints):
-    air_t = states.air_t
     thermal_screen_t = states.thermal_screen_t
-    air_vp = saturation_vapor_pressure(air_t)
     thScr_vp = saturation_vapor_pressure(thermal_screen_t)
-    HEC_AirThScr = 1.7 * setpoints.U_ThScr * abs(air_t - thermal_screen_t) ** 0.33
-    mass_vapor_flux_AirThScr = differentiable_air_to_obj_vapor_flux(air_vp, thScr_vp, HEC_AirThScr)
+    HEC_AirThScr = 1.7 * setpoints.U_ThScr * abs(states.air_t - thermal_screen_t) ** 0.33
+    mass_vapor_flux_AirThScr = differentiable_air_to_obj_vapor_flux(states.air_vapor_pressure, thScr_vp, HEC_AirThScr)
     return latent_heat_fluxes(mass_vapor_flux_AirThScr)
 
 
@@ -260,9 +256,8 @@ def sensible_heat_flux_between_above_thermal_screen_and_internal_cover(states: S
     above_thermal_screen_t = states.above_thermal_screen_t
     internal_cov_t = states.internal_cov_t
     c_HECin = Coefficients.Construction.c_HECin
-    cover_area = Coefficients.Construction.cover_area
-    floor_area = Coefficients.Construction.floor_area
-    HEC_TopCov_in = c_HECin * (above_thermal_screen_t - internal_cov_t) ** 0.33 * cover_area / floor_area
+    HEC_TopCov_in = c_HECin * (above_thermal_screen_t - internal_cov_t) ** 0.33 * Coefficients.Construction.cover_area \
+                    / Coefficients.Construction.floor_area
     return convective_and_conductive_heat_fluxes(HEC_TopCov_in, above_thermal_screen_t, internal_cov_t)
 
 
@@ -277,12 +272,10 @@ def latent_heat_flux_between_above_thermal_screen_and_internal_cover(states: Sta
     above_thermal_screen_t = states.above_thermal_screen_t
     internal_cov_t = states.internal_cov_t
     c_HECin = Coefficients.Construction.c_HECin
-    cover_area = Coefficients.Construction.cover_area
-    floor_area = Coefficients.Construction.floor_area
-    above_thermal_screen_vp = saturation_vapor_pressure(above_thermal_screen_t)
     cov_in_vp = saturation_vapor_pressure(internal_cov_t)
-    HEC_TopCov_in = c_HECin * (above_thermal_screen_t - internal_cov_t) ** 0.33 * cover_area / floor_area
-    mass_vapor_flux_TopCov_in = differentiable_air_to_obj_vapor_flux(above_thermal_screen_vp, cov_in_vp, HEC_TopCov_in)
+    HEC_TopCov_in = c_HECin * (above_thermal_screen_t - internal_cov_t) ** 0.33 * Coefficients.Construction.cover_area \
+                    / Coefficients.Construction.floor_area
+    mass_vapor_flux_TopCov_in = differentiable_air_to_obj_vapor_flux(states.above_thermal_screen_vapor_pressure, cov_in_vp, HEC_TopCov_in)
     return latent_heat_fluxes(mass_vapor_flux_TopCov_in)
 
 
@@ -292,13 +285,10 @@ def sensible_heat_flux_between_internal_cover_and_external_cover(states: States,
 
 
 def sensible_heat_flux_between_external_cover_and_outdoor(states: States, weather: Weather):
-    cover_area = Coefficients.Construction.cover_area
-    floor_area = Coefficients.Construction.floor_area
-    c_HECout_1 = Coefficients.Construction.c_HECout_1
-    c_HECout_2 = Coefficients.Construction.c_HECout_2
-    v_Wind = weather.v_Wind
-    c_HECout_3 = Coefficients.Construction.c_HECout_3
-    HEC_Cov_e_Out = cover_area * (c_HECout_1 + c_HECout_2 * v_Wind ** c_HECout_3) / floor_area
+    HEC_Cov_e_Out = Coefficients.Construction.cover_area \
+                    * (Coefficients.Construction.c_HECout_1
+                       + Coefficients.Construction.c_HECout_2 * weather.v_Wind ** Coefficients.Construction.c_HECout_3) \
+                    / Coefficients.Construction.floor_area
     return convective_and_conductive_heat_fluxes(HEC_Cov_e_Out, states.external_cov_t, weather.outdoor_t)
 
 
@@ -307,7 +297,7 @@ def heat_flux_to_heating_pipe(U, P, A):
     return U * P / A
 
 
-def sensible_heat_flux_between_greenhouse_air_and_black_screen(states: States, setpoints: Setpoints):
+def sensible_heat_flux_between_greenhouse_air_and_blackout_screen(states: States, setpoints: Setpoints):
     """
     Equations A28, A32 [2]
     Args:
@@ -353,25 +343,23 @@ def sensible_heat_flux_between_grow_pipe_and_greenhouse_air(states: States):
     return convective_and_conductive_heat_fluxes(HEC_GroPipeAir, states.groPipe_t, states.air_t)
 
 
-def sensible_heat_flux_between_above_thermal_screen_and_black_screen(states: States):
-    raise NotImplemented
+def sensible_heat_flux_between_above_thermal_screen_and_blackout_screen(states: States, setpoints: Setpoints):
+    HEC_ThScrBlScr = 1.7*setpoints.U_BlScr * abs(states.blScr_t - states.above_thermal_screen_t) ** 0.33
+    return convective_and_conductive_heat_fluxes(HEC_ThScrBlScr, states.blScr_t, states.above_thermal_screen_t)
 
 
-def latent_heat_flux_between_greenhouse_air_and_black_screen(states: States):
-    raise NotImplemented
+def latent_heat_flux_between_greenhouse_air_and_blackout_screen(states: States, setpoints: Setpoints):
+    blScr_vapor_pressure = saturation_vapor_pressure(states.blScr_t)
+    HEC_AirBlScr = 1.7*setpoints.U_BlScr*abs(states.air_t-states.blScr_t)**0.33
+    """
+    % Condensation from main compartment on blackout screen [kg m^{-2} s^{-1}]
+    % Equation A39 [2]
+    """
+    mass_vapor_flux_AirBlScr = differentiable_air_to_obj_vapor_flux(HEC_AirBlScr,
+                                                                    states.air_vapor_pressure,
+                                                                    blScr_vapor_pressure)
+    return latent_heat_fluxes(mass_vapor_flux_AirBlScr)
 
 
-def sensible_heat_flux_between_canopy_and_black_screen(states: States):
-    raise NotImplemented
-
-
-def sensible_heat_flux_between_black_screen_and_sky(states: States):
-    raise NotImplemented
-
-
-def sensible_heat_flux_between_lamp_and_black_screen(states: States):
-    raise NotImplemented
-
-
-def sensible_heat_flux_between_boiler_and_grow_pipe(states: States):
-    raise NotImplemented
+def sensible_heat_flux_between_boiler_and_grow_pipe(setpoints: Setpoints):
+    return setpoints.U_BoilGro*Coefficients.GrowPipe.cap_BoilGro/Coefficients.Construction.floor_area

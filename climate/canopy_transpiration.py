@@ -12,8 +12,7 @@ def canopy_transpiration(states: States, setpoints: Setpoints, weather: Weather)
     """
     VEC_CanopyAir = canopy_transpiration_vapor_transfer_coefficient(states, setpoints, weather)
     canopy_vp = saturation_vapor_pressure(states.canopy_t)
-    air_vp = saturation_vapor_pressure(states.air_t)
-    return VEC_CanopyAir * (canopy_vp - air_vp)
+    return VEC_CanopyAir * (canopy_vp - states.air_vapor_pressure)
 
 
 def canopy_transpiration_vapor_transfer_coefficient(states: States, setpoints: Setpoints, weather: Weather) -> float:
@@ -91,7 +90,7 @@ def greenhouse_co2_resistance_factor(states: States, setpoints: Setpoints, weath
     :return: The resistance factors [W m^-2]
     """
     c_evap3 = smoothed_transpiration_parameters(nth=3, setpoints=setpoints, states=states, weather=weather)
-    return 1 + c_evap3(ETA_MG_PPM * states.air_CO2 - 200) ** 2
+    return 1 + c_evap3(ETA_MG_PPM * states.air_co2 - 200) ** 2
 
 
 def vapor_pressure_resistance_factor(states: States, setpoints: Setpoints, weather: Weather) -> float:
@@ -102,8 +101,7 @@ def vapor_pressure_resistance_factor(states: States, setpoints: Setpoints, weath
     """
     c_evap4 = smoothed_transpiration_parameters(nth=4, setpoints=setpoints, states=states, weather=weather)
     canopy_vp = saturation_vapor_pressure(states.canopy_t)
-    air_vp = saturation_vapor_pressure(states.air_t)
-    return 1 + c_evap4(canopy_vp - air_vp) ** 2
+    return 1 + c_evap4(canopy_vp - states.air_vapor_pressure) ** 2
 
 
 def differentiable_switch(states: States, setpoints: Setpoints, weather: Weather):

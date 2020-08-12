@@ -33,6 +33,12 @@ def heating_pipe_heat_capacity():
            ((phi_external_pipe ** 2 - phi_internal_pipe ** 2) * STEEL_DENSITY * C_PSTEEL + phi_internal_pipe ** 2 * WATER_DENSITY * C_PWATER)
 
 
+def grow_pipe_heat_capacity():
+    return 0.25 * math.pi * Coefficients.GrowPipe.pipe_length \
+           * ((Coefficients.GrowPipe.phi_external_pipe**2 - Coefficients.GrowPipe.phi_internal_pipe**2)
+              * STEEL_DENSITY * C_PSTEEL + Coefficients.GrowPipe.phi_internal_pipe**2 * WATER_DENSITY * C_PWATER)
+
+
 def remaining_object_heat_capacity(height_obj, density_obj, heat_cap_obj):
     """
     Equation 8.23

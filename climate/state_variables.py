@@ -10,16 +10,14 @@ The state variables of the model are all described by differential equations.
 - external_cov_t: External cover temperature
 - pipe_t: Heating pipe temperature
 - air_vapor_pressure: Greenhouse air vapor pressure
-- top_vapor_pressure: The vapor pressure of the compartment above the thermal screen
+- above_thermal_screen_vapor_pressure: The vapor pressure of the compartment above the thermal screen
 - air_CO2: Greenhouse air CO2
 - top_CO2: The CO2 of the compartment above the thermal screen
 """
 from .CO2_fluxes import *
-from .canopy_transpiration import canopy_transpiration
-from .electrical_input import lamp_electrical_input, inter_lamp_electrical_input
+from .electrical_input import inter_lamp_electrical_input
 from .heat_fluxes import *
 from .capacities import *
-from .lumped_cover_layers import *
 from .radiation_fluxes import *
 from .vapor_fluxes import *
 from .utils import air_density
@@ -47,7 +45,7 @@ def canopy_temperature(setpoints: Setpoints, states: States, weather: Weather):
     sensible_heat_flux_CanopyAir = sensible_heat_flux_between_canopy_and_air(states)
     latent_heat_flux_CanopyAir = latent_heat_flux_between_canopy_and_air(states, setpoints, weather)
 
-    radiation_flux_CanopyBlScr = FIR_from_canopy_to_blackscreen(states, setpoints)
+    radiation_flux_CanopyBlScr = FIR_from_canopy_to_blackout_screen(states, setpoints)
     radiation_flux_PAR_LampCanopy = canopy_PAR_absorbed_from_lamp(states, setpoints)
     radiation_flux_NIR_LampCanopy = canopy_NIR_absorbed_from_lamp(states, setpoints)
     radiation_flux_FIR_LampCanopy = FIR_from_lamp_to_canopy(states)
@@ -90,7 +88,7 @@ def greenhouse_air_temperature(setpoints: Setpoints, states: States, weather: We
     sensible_heat_flux_AirTop = sensible_heat_flux_between_above_thermal_screen_and_greenhouse_air(states, setpoints, weather)
     latent_heat_flux_AirFog = latent_heat_flux_between_fogging_and_greenhouse_air(setpoints)
 
-    sensible_heat_flux_AirBlScr = sensible_heat_flux_between_greenhouse_air_and_black_screen(states, setpoints)
+    sensible_heat_flux_AirBlScr = sensible_heat_flux_between_greenhouse_air_and_blackout_screen(states, setpoints)
     sensible_heat_flux_LampAir = sensible_heat_flux_between_lamps_and_greenhouse_air(states)
     radiation_flux_LampAir = lamp_radiation(states, setpoints, weather)
     sensible_heat_flux_IntLampAir = sensible_heat_flux_between_inter_lamp_and_greenhouse_air(states)
@@ -127,10 +125,10 @@ def floor_temperature(setpoints: Setpoints, states: States, weather: Weather):
     radiation_flux_FlrThScr = FIR_from_floor_to_thermal_screen(states, setpoints)
     sensible_heat_flux_FlrSo1 = sensible_heat_flux_between_floor_and_first_layer_soil(states)
 
-    radiation_flux_FlrBlScr = FIR_from_floor_to_black_screen(states, setpoints, weather)
+    radiation_flux_FlrBlScr = FIR_from_floor_to_blackout_screen(states, setpoints)
     radiation_flux_PAR_LampFlr = floor_PAR_absorbed_from_lamp(states, setpoints, weather)
-    radiation_flux_NIR_LampFlr = floor_NIR_absorbed_from_lamp(states, setpoints, weather)
-    radiation_flux_FIR_LampFlr = FIR_from_lamp_to_floor(states, setpoints, weather)
+    radiation_flux_NIR_LampFlr = floor_NIR_absorbed_from_lamp(states, setpoints)
+    radiation_flux_FIR_LampFlr = FIR_from_lamp_to_floor(states)
 
     return (sensible_heat_flux_AirFlr + radiation_flux_PAR_SunFlr + radiation_flux_NIR_SunFlr
             + radiation_flux_CanopyFlr + radiation_flux_PipeFlr - sensible_heat_flux_FlrSo1
@@ -185,8 +183,9 @@ def thermal_screen_temperature(setpoints: Setpoints, states: States, weather: We
     sensible_heat_flux_ThScrTop = sensible_heat_flux_between_thermal_screen_and_above_thermal_screen(states, setpoints)
     radiation_flux_ThScrCov_in = FIR_from_thermal_screen_to_internal_cover(states, setpoints)
     radiation_flux_ThScrSky = FIR_from_thermal_screen_to_sky(states, setpoints, weather)
-    radiation_flux_BlScrThScr = FIR_from_black_screen_to_thermal_screen(states, setpoints, weather)
-    radiation_flux_LampThScr = FIR_from_lamp_to_thermal_screen(states, setpoints, weather)
+
+    radiation_flux_BlScrThScr = FIR_from_blackout_screen_to_thermal_screen(states, setpoints)
+    radiation_flux_LampThScr = FIR_from_lamp_to_thermal_screen(states, setpoints)
     return (sensible_heat_flux_AirThScr + latent_heat_flux_AirThScr + radiation_flux_CanopyThScr
             + radiation_flux_FlrThScr + radiation_flux_PipeThScr - sensible_heat_flux_ThScrTop
             - radiation_flux_ThScrCov_in - radiation_flux_ThScrSky + radiation_flux_BlScrThScr
@@ -212,7 +211,7 @@ def top_compartment_temperature(setpoints: Setpoints, states: States, weather: W
     sensible_heat_flux_AirTop = sensible_heat_flux_between_above_thermal_screen_and_greenhouse_air(states, setpoints, weather)
     sensible_heat_flux_TopCov_in = sensible_heat_flux_between_above_thermal_screen_and_internal_cover(states, setpoints)
     sensible_heat_flux_TopOut = sensible_heat_flux_between_above_thermal_screen_and_outdoor(states, setpoints, weather)
-    sensible_heat_flux_BlScrTop = sensible_heat_flux_between_above_thermal_screen_and_black_screen(states)
+    sensible_heat_flux_BlScrTop = sensible_heat_flux_between_above_thermal_screen_and_blackout_screen(states, setpoints)
     return (sensible_heat_flux_ThScrTop + sensible_heat_flux_AirTop
             - sensible_heat_flux_TopCov_in - sensible_heat_flux_TopOut + sensible_heat_flux_BlScrTop) / cap_Top
 
@@ -235,7 +234,8 @@ def internal_cover_temperature(setpoints: Setpoints, states: States):
     radiation_flux_PipeCov_in = FIR_from_heating_pipe_to_internal_cover(states, setpoints)
     radiation_flux_ThScrCov_in = FIR_from_thermal_screen_to_internal_cover(states, setpoints)
     sensible_heat_flux_Cov_in_Cov_e = sensible_heat_flux_between_internal_cover_and_external_cover(states, setpoints)
-    radiation_flux_BlScrCov_in = FIR_from_black_screen_to_internal_cover(states, setpoints)
+
+    radiation_flux_BlScrCov_in = FIR_from_blackout_screen_to_internal_cover(states, setpoints)
     radiation_flux_LampCov_in = FIR_from_lamp_to_internal_cover(states, setpoints)
     return (sensible_heat_flux_TopCov_in + latent_heat_flux_TopCov_in + radiation_flux_CanopyCov_in
             + radiation_flux_FlrCov_in + radiation_flux_PipeCov_in + radiation_flux_ThScrCov_in
@@ -252,7 +252,7 @@ def external_cover_temperature(setpoints: Setpoints, states: States, weather: We
     cap_Cov = lumped_cover_heat_capacity(setpoints)
     cap_Cov_e = internal_external_canopy_heat_capacity(cap_Cov)
 
-    radiation_flux_Glob_SunCov_e = cover_global_radiation(states, setpoints, weather)
+    radiation_flux_Glob_SunCov_e = cover_global_radiation(setpoints, weather)
     sensible_heat_flux_Cov_in_Cov_e = sensible_heat_flux_between_internal_cover_and_external_cover(states, setpoints)
     sensible_heat_flux_Cov_e_Out = sensible_heat_flux_between_external_cover_and_outdoor(states, weather)
     radiation_flux_Cov_e_Sky = FIR_from_external_cover_to_sky(states, weather)
@@ -291,52 +291,55 @@ def heating_pipe_system_surface_temperature(setpoints: Setpoints, states: States
     radiation_flux_PipeFlr = FIR_from_heating_pipe_to_floor(states)
     radiation_flux_PipeThScr = FIR_from_heating_pipe_to_thermal_screen(states, setpoints)
     sensible_heat_flux_PipeAir = sensible_heat_flux_between_heating_pipe_and_greenhouse_air(states)
-    radiation_flux_PipeBlScr = FIR_from_heating_pipe_to_black_screen(states, setpoints, weather)
-    radiation_flux_LampPipe = FIR_from_lamp_to_heating_pipe(states, setpoints, weather)
+
+    radiation_flux_PipeBlScr = FIR_from_heating_pipe_to_blackout_screen(states, setpoints)
+    radiation_flux_LampPipe = FIR_from_lamp_to_heating_pipe(states)
     return (sensible_heat_flux_BoilPipe + sensible_heat_flux_IndPipe + sensible_heat_flux_GeoPipe
             - radiation_flux_PipeSky - radiation_flux_PipeCov_in - radiation_flux_PipeCanopy
             - radiation_flux_PipeFlr - radiation_flux_PipeThScr - sensible_heat_flux_PipeAir
             - radiation_flux_PipeBlScr + radiation_flux_LampPipe) / cap_Pipe
 
 
-def black_screen_temperature(setpoints: Setpoints, states: States, weather: Weather):
+def blackout_screen_temperature(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 1 [2] [W m-2]
-    cap_BlScr * blScr_t = sensible_heat_flux_AirBlScr + latent_heat_flux_AirBlScr + radiation_flux_CanBlScr
+    cap_BlScr * blScr_t = sensible_heat_flux_AirBlScr + latent_heat_flux_AirBlScr + radiation_flux_CanopyBlScr
                         + radiation_flux_FlrBlScr + radiation_flux_PipeBlScr - sensible_heat_flux_BlScrTop
                         - radiation_flux_BlScrCov_in - radiation_flux_BlScrSky - radiation_flux_BlScrThScr
                         + radiation_flux_LampBlScr
     Returns: The black screen temperature
     """
-    cap_BlScr = 0
-    sensible_heat_flux_AirBlScr = sensible_heat_flux_between_greenhouse_air_and_black_screen(states, setpoints)
-    latent_heat_flux_AirBlScr = latent_heat_flux_between_greenhouse_air_and_black_screen(states)
-    radiation_flux_CanBlScr = sensible_heat_flux_between_canopy_and_black_screen(states)
-    radiation_flux_FlrBlScr = FIR_from_floor_to_black_screen(states, setpoints, weather)
-    radiation_flux_PipeBlScr = FIR_from_heating_pipe_to_black_screen(states, setpoints, weather)
-    sensible_heat_flux_BlScrTop = sensible_heat_flux_between_above_thermal_screen_and_black_screen(states)
-    radiation_flux_BlScrCov_in = FIR_from_black_screen_to_internal_cover(states, setpoints)
-    radiation_flux_BlScrSky = sensible_heat_flux_between_black_screen_and_sky(states)
-    radiation_flux_BlScrThScr = FIR_from_black_screen_to_thermal_screen(states, setpoints, weather)
-    radiation_flux_LampBlScr = sensible_heat_flux_between_lamp_and_black_screen(states)
+    cap_BlScr = remaining_object_heat_capacity(Coefficients.Blackoutscreen.blScr_thickness,
+                                               Coefficients.Blackoutscreen.blScr_density,
+                                               Coefficients.Blackoutscreen.c_pBlScr)
+    sensible_heat_flux_AirBlScr = sensible_heat_flux_between_greenhouse_air_and_blackout_screen(states, setpoints)
+    latent_heat_flux_AirBlScr = latent_heat_flux_between_greenhouse_air_and_blackout_screen(states, setpoints)
+    radiation_flux_CanopyBlScr = FIR_from_canopy_to_blackout_screen(states, setpoints)
+    radiation_flux_FlrBlScr = FIR_from_floor_to_blackout_screen(states, setpoints)
+    radiation_flux_PipeBlScr = FIR_from_heating_pipe_to_blackout_screen(states, setpoints)
+    sensible_heat_flux_BlScrTop = sensible_heat_flux_between_above_thermal_screen_and_blackout_screen(states, setpoints)
+    radiation_flux_BlScrCov_in = FIR_from_blackout_screen_to_internal_cover(states, setpoints)
+    radiation_flux_BlScrSky = FIR_from_blackout_screen_to_sky(states, setpoints, weather)
+    radiation_flux_BlScrThScr = FIR_from_blackout_screen_to_thermal_screen(states, setpoints)
+    radiation_flux_LampBlScr = FIR_from_lamp_to_blackout_screen(states, setpoints)
 
-    return (sensible_heat_flux_AirBlScr + latent_heat_flux_AirBlScr + radiation_flux_CanBlScr
+    return (sensible_heat_flux_AirBlScr + latent_heat_flux_AirBlScr + radiation_flux_CanopyBlScr
             + radiation_flux_FlrBlScr + radiation_flux_PipeBlScr - sensible_heat_flux_BlScrTop
             - radiation_flux_BlScrCov_in - radiation_flux_BlScrSky - radiation_flux_BlScrThScr
             + radiation_flux_LampBlScr)/cap_BlScr
 
 
-def grow_pipe_temperature(setpoints: Setpoints, states: States, weather: Weather):
+def grow_pipe_temperature(setpoints: Setpoints, states: States):
     """
     Equation 1 [2] [W m-2]
     cap_GroPipe * groPipe_t = sensible_heat_flux_BoilGroPipe -  radiation_flux_GroPipeCanopy - sensible_heat_flux_GroPipeAir
     Returns: The grow pipe temperature
     """
-    cap_GroPipe = 0
-    sensible_heat_flux_BoilGroPipe = sensible_heat_flux_between_boiler_and_grow_pipe(states)
+    cap_GroPipe = grow_pipe_heat_capacity()
+    sensible_heat_flux_BoilGroPipe = sensible_heat_flux_between_boiler_and_grow_pipe(setpoints)
     radiation_flux_GroPipeCanopy = FIR_from_grow_pipe_to_canopy(states)
     sensible_heat_flux_GroPipeAir = sensible_heat_flux_between_grow_pipe_and_greenhouse_air(states)
-    return (sensible_heat_flux_BoilGroPipe -  radiation_flux_GroPipeCanopy - sensible_heat_flux_GroPipeAir) / cap_GroPipe
+    return (sensible_heat_flux_BoilGroPipe - radiation_flux_GroPipeCanopy - sensible_heat_flux_GroPipeAir) / cap_GroPipe
 
 
 def lamps_temperature(setpoints: Setpoints, states: States, weather: Weather):
@@ -349,23 +352,23 @@ def lamps_temperature(setpoints: Setpoints, states: States, weather: Weather):
                       - radiation_flux_FIR_LampFlr - radiation_flux_LampAir - sensible_heat_flux_LampCool
     Returns:
     """
-    cap_Lamp = 0
+    cap_Lamp = Coefficients.Lamp.heat_capacity_lamp
     electrical_input_Lamp = lamp_electrical_input(setpoints)
     radiation_flux_LampSky = FIR_from_lamp_to_sky(states, setpoints, weather)
     radiation_flux_LampCov_in = FIR_from_lamp_to_internal_cover(states, setpoints)
-    radiation_flux_LampThScr = FIR_from_lamp_to_thermal_screen(states, setpoints, weather)
-    radiation_flux_LampBlScr = sensible_heat_flux_between_lamp_and_black_screen(states)
+    radiation_flux_LampThScr = FIR_from_lamp_to_thermal_screen(states, setpoints)
+    radiation_flux_LampBlScr = FIR_from_lamp_to_blackout_screen(states, setpoints)
     sensible_heat_flux_LampAir = sensible_heat_flux_between_lamps_and_greenhouse_air(states)
     radiation_flux_PAR_LampCanopy = canopy_PAR_absorbed_from_lamp(states, setpoints)
     radiation_flux_NIR_LampCanopy = canopy_NIR_absorbed_from_lamp(states, setpoints)
     radiation_flux_FIR_LampCanopy = FIR_from_inter_lamp_to_canopy(states)
-    radiation_flux_LampPipe = FIR_from_lamp_to_heating_pipe(states, setpoints, weather)
+    radiation_flux_LampPipe = FIR_from_lamp_to_heating_pipe(states)
     radiation_flux_PAR_LampFlr = floor_PAR_absorbed_from_lamp(states, setpoints, weather)
-    radiation_flux_NIR_LampFlr = floor_NIR_absorbed_from_lamp(states, setpoints, weather)
-    radiation_flux_FIR_LampFlr = FIR_from_lamp_to_floor(states, setpoints, weather)
+    radiation_flux_NIR_LampFlr = floor_NIR_absorbed_from_lamp(states, setpoints)
+    radiation_flux_FIR_LampFlr = FIR_from_lamp_to_floor(states)
 
     radiation_flux_LampAir = lamp_radiation(states, setpoints, weather)
-    sensible_heat_flux_LampCool = 0
+    sensible_heat_flux_LampCool = Coefficients.Lamp.lamp_cool_energy * electrical_input_Lamp  # Equation A34 [2]
     return (electrical_input_Lamp - radiation_flux_LampSky - radiation_flux_LampCov_in
                       - radiation_flux_LampThScr - radiation_flux_LampBlScr - sensible_heat_flux_LampAir
                       - radiation_flux_PAR_LampCanopy - radiation_flux_NIR_LampCanopy - radiation_flux_FIR_LampCanopy
@@ -373,15 +376,15 @@ def lamps_temperature(setpoints: Setpoints, states: States, weather: Weather):
                       - radiation_flux_FIR_LampFlr - radiation_flux_LampAir - sensible_heat_flux_LampCool)/cap_Lamp
 
 
-def inter_lamps_temperature(setpoints: Setpoints, states: States, weather: Weather):
+def inter_lamps_temperature(setpoints: Setpoints, states: States):
     """
     Equation 2 [2] [W m-2]
     cap_LampInt * intLamp_t = electrical_input_IntLampIn - sensible_heat_flux_IntLampAir - radiation_flux_PAR_IntLampCanopy
                             - radiation_flux_NIR_IntLampCanopy - radiation_flux_FIR_IntLampCanopy
     Returns:
     """
-    cap_LampInt = 0
-    electrical_input_IntLampIn = inter_lamp_electrical_input(states, setpoints)
+    cap_LampInt = Coefficients.Interlight.heat_inter_lamp_capacity
+    electrical_input_IntLampIn = inter_lamp_electrical_input(setpoints)
     sensible_heat_flux_IntLampAir = sensible_heat_flux_between_inter_lamp_and_greenhouse_air(states)
     radiation_flux_PAR_IntLampCanopy = canopy_PAR_absorbed_from_inter_lamp(setpoints)
     radiation_flux_NIR_IntLampCanopy = canopy_NIR_absorbed_from_inter_lamp(setpoints)
@@ -415,7 +418,7 @@ def greenhouse_air_vapor_pressure(setpoints: Setpoints, states: States, weather:
 def top_compartment_vapor_pressure(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 2.11 / 8.11
-    cap_vapor_Top * top_vapor_pressure = mass_vapor_flux_AirTop − mass_vapor_flux_TopCov_in − mass_vapor_flux_TopOut
+    cap_vapor_Top * above_thermal_screen_vapor_pressure = mass_vapor_flux_AirTop − mass_vapor_flux_TopCov_in − mass_vapor_flux_TopOut
     :return: The above thermal screen air vapor pressure
     """
     cap_vapor_Top = air_compartment_water_vapor_capacity(states)
@@ -432,24 +435,24 @@ def greenhouse_air_co2(setpoints: Setpoints, states: States, weather: Weather):
                           - mass_CO2_flux_AirCanopy - mass_CO2_flux_AirTop - mass_CO2_flux_AirOut
     :return: The greenhouse air CO2 concentration
     """
-    cap_CO2_Air = coefs.Construction.air_height
-    mass_CO2_flux_BlowAir = heat_blower_to_greenhouse_air_CO2_flux(setpoints)
-    mass_CO2_flux_ExtAir = external_CO2_added(setpoints)
-    mass_CO2_flux_AirCanopy = states.mass_CO2_flux_AirCanopy
-    mass_CO2_flux_AirTop = greenhouse_air_and_above_thermal_screen_CO2_flux(states, setpoints, weather)
-    mass_CO2_flux_AirOut = greenhouse_air_and_outdoor_CO2_flux(states, setpoints, weather)
-    return (mass_CO2_flux_BlowAir + mass_CO2_flux_ExtAir
-            - mass_CO2_flux_AirCanopy - mass_CO2_flux_AirTop - mass_CO2_flux_AirOut) / cap_CO2_Air
+    cap_co2_Air = coefs.Construction.air_height
+    mass_co2_flux_BlowAir = heat_blower_to_greenhouse_air_co2_flux(setpoints)
+    mass_co2_flux_ExtAir = external_co2_added(setpoints)
+    mass_co2_flux_AirCanopy = states.mass_co2_flux_AirCanopy
+    mass_co2_flux_AirTop = greenhouse_air_and_above_thermal_screen_co2_flux(states, setpoints, weather)
+    mass_co2_flux_AirOut = greenhouse_air_and_outdoor_co2_flux(states, setpoints, weather)
+    return (mass_co2_flux_BlowAir + mass_co2_flux_ExtAir
+            - mass_co2_flux_AirCanopy - mass_co2_flux_AirTop - mass_co2_flux_AirOut) / cap_co2_Air
 
 
-def top_compartment_air_CO2(setpoints: Setpoints, states: States, weather: Weather):
+def top_compartment_air_co2(setpoints: Setpoints, states: States, weather: Weather):
     """
     Equation 2.13 / 8.13
     cap_CO2_Top * top_CO2 = mass_CO2_flux_AirTop - mass_CO2_flux_TopOut
     :return: The above thermal screen air CO2 concentration
     """
-    cap_CO2_Top = coefs.Construction.greenhouse_height - coefs.Construction.air_height
-    mass_CO2_flux_AirTop = greenhouse_air_and_above_thermal_screen_CO2_flux(states, setpoints, weather)
-    mass_CO2_flux_TopOut = above_thermal_screen_and_outdoor_CO2_flux(states, setpoints, weather)
-    return (mass_CO2_flux_AirTop - mass_CO2_flux_TopOut) / cap_CO2_Top
+    cap_co2_Top = coefs.Construction.greenhouse_height - coefs.Construction.air_height
+    mass_co2_flux_AirTop = greenhouse_air_and_above_thermal_screen_co2_flux(states, setpoints, weather)
+    mass_co2_flux_TopOut = above_thermal_screen_and_outdoor_co2_flux(states, setpoints, weather)
+    return (mass_co2_flux_AirTop - mass_co2_flux_TopOut) / cap_co2_Top
 

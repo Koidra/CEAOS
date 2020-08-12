@@ -91,7 +91,7 @@ class Coefficients(object):
     class ActiveClimateControl:
         # cap_Fog Capacity of the fogging system
         # ventForced_air_flow Air flow capacity of the forced ventilation system
-        cap_extCO2 = 4.3E5  # Capacity of the external CO2 source
+        cap_extco2 = 4.3E5  # Capacity of the external CO2 source
         # perf_MechCool_coef Coefficient of performance of the mechanical cooling system
         # HEC_PasAir The convective heat exchange coefficient between the passive heat storage facility and the greenhouse air temperature
         # heat_cap_Blow Heat capacity of the heat blowers
@@ -131,12 +131,17 @@ class Coefficients(object):
         c_HEC_InterLampAir = 0  # the heat exchange coefficient between the lamps and the surrounding air [W K-1 m-2]
 
     class Blackoutscreen:
+        blScr_FIR_emission_coef = 0.67  # FIR emissions coefficient of the blackout screen [-]
         blScr_PAR_transmission_coef = 0.01
         blScr_PAR_reflection_coef = 0.35
-        blScr_FIR_emission_coef = 0.67  # FIR emissions coefficient of the blackout screen
+        blScr_FIR_transmission_coef = 0.7  # FIR transmission coefficient of the blackout screen [-]
+        blScr_thickness = 0.35e-3
+        blScr_density = 0.2e3  # Density of blackout screen [kg m^{-3}]
+        c_pBlScr = 1.8E3  # Specific heat capacity of the blackout screen [J kg^{-1} K^{-1}]
 
     class GrowPipe:
         phi_external_pipe = 0.035  # External diameter of the grow pipes [m]
         phi_internal_pipe = 0.0338  # Internal diameter of the grow pipes [m]
         pipe_length = 1.655  # Length of the grow pipes per square meter greenhouse floor [m m-2]
         groPipe_FIR_emission_coef = 0  # FIR emissions coefficient of the blackout screen
+        cap_BoilGro = 0
