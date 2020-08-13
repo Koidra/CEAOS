@@ -1,5 +1,5 @@
 from coefficients import Coefficients
-from data_models import Setpoints, States
+from data_models import Setpoints
 
 
 def lamp_electrical_input(setpoints: Setpoints):

@@ -20,35 +20,36 @@ class Setpoints(NamedTuple):
     U_BlScr: float  # the opening of the blackout screen
 
 
-class States(NamedTuple):
-    pipe_t: float  # pipe temperature
-    canopy_t: float  # canopy temperature
-    air_t: float  # greenhouse air temperature
-    internal_cov_t: float  # internal cover temperature
-    external_cov_t: float  # external cover temperature
-    thermal_screen_t: float  # thermal screen temperature
-    above_thermal_screen_t: float  # above thermal screen temperature a.k.a top compartment temperature
-    floor_t: float  # floor temperature
-    soil_j_t: [float, float, float, float, float]  # soil layer temperatures
-    blScr_t: float
-    groPipe_t: float
-    lamp_t: float
-    intLamp_t: float
-    air_co2: float  # CO2 in greenhouse air
-    above_thermal_screen_co2: float  # CO2 in top compartment air
-    air_vapor_pressure: float
-    above_thermal_screen_vapor_pressure: float
+class ClimateStates(NamedTuple):
+    t_Pipe: float  # pipe temperature
+    t_Canopy: float  # canopy temperature
+    t_Air: float  # greenhouse air temperature
+    t_Cov_internal: float  # internal cover temperature
+    t_Cov_external: float  # external cover temperature
+    t_ThScr: float  # thermal screen temperature
+    t_AboveThScr: float  # above thermal screen temperature a.k.a top compartment temperature
+    t_Floor: float  # floor temperature
+    t_Soil: [float, float, float, float, float]  # soil layer temperatures
+    t_BlScr: float  # blackout screen temperatures
+    t_GrowPipe: float  # grow pipe temperatures
+    t_Lamp: float
+    t_IntLamp: float
+    co2_Air: float  # CO2 in greenhouse air
+    co2_AboveThScr: float  # CO2 in top compartment air
+    vapor_pressure_Air: float
+    vapor_pressure_AboveThScr: float
     # Recheck these vars
     leaf_area_index: float
-    mechcool_t: float  # Mechanical cooling system temperature
+    t_MechCool: float  # Mechanical cooling system temperature
     mass_co2_flux_AirCanopy: float  # CO2 flux from greenhouse air to canopy
+    PAR_Canopy: float
 
 
 class Weather(NamedTuple):
     outdoor_global_rad: float  # outdoor global radiation
-    outdoor_t: float  # outdoor temperature
-    sky_t: float  # sky temperature
-    soil_out_t: float  # deep out soil temperature
-    outdoor_co2: float  # outdoor CO2
-    outdoor_vp: float  # outdoor vapor pressure
+    t_Outdoor: float  # outdoor temperature
+    t_Sky: float  # sky temperature
+    t_Soil_Out: float  # deep out soil temperature
+    co2_outdoor: float  # outdoor CO2
+    vapor_pressure_outdoor: float  # outdoor vapor pressure
     v_Wind: float  # wind velocity

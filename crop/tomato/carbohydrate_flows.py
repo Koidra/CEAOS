@@ -5,7 +5,7 @@ from .inhibitions import *
 from .utils import *
 
 
-def net_photosynthesis_rate(carbohydrate_amount_Buf, carbohydrate_amount_Leaf, outdoor_global_rad, air_co2, canopy_t):
+def net_photosynthesis_rate(carbohydrate_amount_Buf, carbohydrate_amount_Leaf, air_co2, canopy_t, PAR_Canopy):
     """
     Equation 9.10
     carbohydrate_mass_flow_AirBuf = M_CH2O * carbohydrates_saturation_photosynthesis_rate_inhibition
@@ -16,10 +16,9 @@ def net_photosynthesis_rate(carbohydrate_amount_Buf, carbohydrate_amount_Leaf, o
         carbohydrate_amount_Buf)
     stomata_co2_concentration = co2_concentration_inside_stomata(air_co2)
     co2_compensation_point = co2_compensation(carbohydrate_amount_Leaf, canopy_t)
-    gross_canopy_photosynthesis_rate = canopy_level_photosynthesis_rate(carbohydrate_amount_Leaf, outdoor_global_rad,
-                                                                        canopy_t,
+    gross_canopy_photosynthesis_rate = canopy_level_photosynthesis_rate(carbohydrate_amount_Leaf, canopy_t,
                                                                         stomata_co2_concentration,
-                                                                        co2_compensation_point)
+                                                                        co2_compensation_point, PAR_Canopy)
     return M_CH2O * carbohydrates_saturation_photosynthesis_rate_inhibition_rate \
            * (gross_canopy_photosynthesis_rate
               - photorespiration_rate(gross_canopy_photosynthesis_rate,
@@ -27,13 +26,13 @@ def net_photosynthesis_rate(carbohydrate_amount_Buf, carbohydrate_amount_Leaf, o
                                       co2_compensation_point))
 
 
-def canopy_level_photosynthesis_rate(carbohydrate_amount_Leaf, outdoor_global_rad, canopy_t, stomata_co2_concentration, co2_compensation_point):
+def canopy_level_photosynthesis_rate(carbohydrate_amount_Leaf, canopy_t, stomata_co2_concentration, co2_compensation_point, PAR_Canopy):
     """
     Equations 9.12
     canopy_level_photosynthesis_rate = electron_transport_rate * (stomata_CO2_concentration - CO2_compensation_point) / (4 * (stomata_CO2_concentration + 2*CO2_compensation_point))
     Returns: gross canopy photosynthesis rate [µmol {CO2} m^-2 s^-1]
     """
-    electron_transport_rate = electron_transport(carbohydrate_amount_Leaf, outdoor_global_rad, canopy_t)
+    electron_transport_rate = electron_transport(carbohydrate_amount_Leaf, canopy_t, PAR_Canopy)
     return electron_transport_rate * (stomata_co2_concentration - co2_compensation_point) \
            / (4 * (stomata_co2_concentration + 2 * co2_compensation_point))
 
@@ -44,8 +43,8 @@ def photorespiration_rate(gross_canopy_photosynthesis_rate, stomata_co2_concentr
     photorespiration_rate = gross_canopy_photosynthesis_rate * CO2_compensation_point / stomata_CO2_concentration
     Args:
         gross_canopy_photosynthesis_rate:
-        stomata_CO2_concentration:
-        CO2_compensation_point:
+        stomata_co2_concentration:
+        co2_compensation_point:
     Returns: photorespiration rate [µmol {CO2} m^-2 s^-1]
     """
     return gross_canopy_photosynthesis_rate * co2_compensation_point / stomata_co2_concentration

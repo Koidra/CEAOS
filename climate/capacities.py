@@ -1,11 +1,11 @@
 import math
 
 from coefficients import Coefficients
-from data_models import States
+from data_models import ClimateStates
 from constants import *
 
 
-def canopy_heat_capacity(states: States) -> float:
+def canopy_heat_capacity(states: ClimateStates) -> float:
     """The heat capacity of the canopy
     Equation 8.20
 
@@ -52,7 +52,7 @@ def remaining_object_heat_capacity(height_obj, density_obj, heat_cap_obj):
     return height_obj * density_obj * heat_cap_obj
 
 
-def air_compartment_water_vapor_capacity(states: States):
+def air_compartment_water_vapor_capacity(states: ClimateStates):
     # Equation 8.25
     air_height = Coefficients.Construction.air_height
-    return M_WATER * air_height / ((states.air_t + 273.15) * M_GAS)
+    return M_WATER * air_height / ((states.t_Air + 273.15) * M_GAS)

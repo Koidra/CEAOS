@@ -1,11 +1,11 @@
 import math
 
 from ...constants import *
-from .radiations import PAR_absorbed_by_canopy
 from .utils import leaf_area_index
+from .tomato_constants import *
 
 
-def electron_transport(carbohydrate_amount_Leaf, outdoor_global_rad, canopy_t):
+def electron_transport(carbohydrate_amount_Leaf, canopy_t, PAR_Canopy):
     """
     Equation 9.14
     electron_transport_rate =  (potential_electron_transport_rate + PHOTONS_TO_ELECTRONS_CONVERSION_FACTOR * canopy_PAR_absorbed
@@ -18,11 +18,10 @@ def electron_transport(carbohydrate_amount_Leaf, outdoor_global_rad, canopy_t):
 
     """
     potential_electron_transport_rate = potential_electron_transport(carbohydrate_amount_Leaf, canopy_t)
-    canopy_PAR_absorbed = PAR_absorbed_by_canopy(carbohydrate_amount_Leaf, outdoor_global_rad)
-    return (potential_electron_transport_rate + PHOTONS_TO_ELECTRONS_CONVERSION_FACTOR * canopy_PAR_absorbed
-            - math.sqrt((potential_electron_transport_rate + PHOTONS_TO_ELECTRONS_CONVERSION_FACTOR * canopy_PAR_absorbed) ** 2
+    return (potential_electron_transport_rate + PHOTONS_TO_ELECTRONS_CONVERSION_FACTOR * PAR_Canopy
+            - math.sqrt((potential_electron_transport_rate + PHOTONS_TO_ELECTRONS_CONVERSION_FACTOR * PAR_Canopy) ** 2
                         - 4 * ELECTRON_TRANSPORT_RATE_CURVATURE * potential_electron_transport_rate
-                        * PHOTONS_TO_ELECTRONS_CONVERSION_FACTOR * canopy_PAR_absorbed)) \
+                        * PHOTONS_TO_ELECTRONS_CONVERSION_FACTOR * PAR_Canopy)) \
             / (2 * ELECTRON_TRANSPORT_RATE_CURVATURE)
 
 

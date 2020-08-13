@@ -53,57 +53,53 @@ def absorption_coefficient(transmission_coef, reflection_coef):
 # TODO: refactor this
 
 
-def roof_thermal_screen_PAR_transmission_coefficient(setpoints: Setpoints):
+def two_layers_transmission_coefficient(U_1, U_2, transmission_coef_1, transmission_coef_2, reflection_coef_1, reflection_coef_2):
     # Equation 8.16
-    U_Roof = setpoints.U_Roof
-    U_ThScr = setpoints.U_ThScr
-    roof_PAR_transmission_coef = Coefficients.Roof.roof_PAR_transmission_coefficient
-    roof_PAR_reflection_coef = Coefficients.Roof.roof_PAR_reflection_coefficient
-    thScr_PAR_transmission_coef = Coefficients.Thermalscreen.thScr_PAR_transmission_coefficient
-    thScr_PAR_reflection_coef = Coefficients.Thermalscreen.thScr_PAR_reflection_coefficient
-    return (1 - U_Roof * (1 - roof_PAR_transmission_coef)) * \
-           (1 - U_ThScr * (1 - thScr_PAR_transmission_coef)) / \
-           (1 - U_Roof * roof_PAR_reflection_coef * U_ThScr * thScr_PAR_reflection_coef)
+    return (1 - U_1 * (1 - transmission_coef_1)) * \
+           (1 - U_2 * (1 - transmission_coef_2)) / \
+           (1 - U_1 * reflection_coef_1 * U_2 * reflection_coef_2)
+
+
+def two_layers_reflection_coefficient(U_1, U_2, transmission_coef_1, reflection_coef_1, reflection_coef_2):
+    # Equation 8.17
+    return U_1 * reflection_coef_1 + \
+           (1 - U_1 * (1 - transmission_coef_1)) ** 2 * U_2 * reflection_coef_2 / \
+           (1 - U_1 * reflection_coef_1 * U_2 * reflection_coef_2)
+
+
+def roof_thermal_screen_PAR_transmission_coefficient(setpoints: Setpoints):
+    return two_layers_transmission_coefficient(setpoints.U_Roof, setpoints.U_ThScr,
+                                               Coefficients.Roof.roof_PAR_transmission_coefficient,
+                                               Coefficients.Thermalscreen.thScr_PAR_transmission_coefficient,
+                                               Coefficients.Roof.roof_PAR_reflection_coefficient,
+                                               Coefficients.Thermalscreen.thScr_PAR_reflection_coefficient)
 
 
 def roof_thermal_screen_PAR_reflection_coefficient(setpoints: Setpoints):
-    # Equation 8.17
-    U_Roof = setpoints.U_Roof
-    U_ThScr = setpoints.U_ThScr
-    roof_PAR_transmission_coef = Coefficients.Roof.roof_PAR_transmission_coefficient
-    roof_PAR_reflection_coef = Coefficients.Roof.roof_PAR_reflection_coefficient
-    thScr_PAR_reflection_coef = Coefficients.Thermalscreen.thScr_PAR_reflection_coefficient
-    return U_Roof * roof_PAR_reflection_coef + \
-           (1 - U_Roof * (1 - roof_PAR_transmission_coef)) ** 2 * U_ThScr * thScr_PAR_reflection_coef / \
-           (1 - U_Roof * roof_PAR_reflection_coef * U_ThScr * thScr_PAR_reflection_coef)
+    return two_layers_reflection_coefficient(setpoints.U_Roof, setpoints.U_ThScr,
+                                             Coefficients.Roof.roof_PAR_transmission_coefficient,
+                                             Coefficients.Roof.roof_PAR_reflection_coefficient,
+                                             Coefficients.Thermalscreen.thScr_PAR_reflection_coefficient)
 
 
 def roof_thermal_screen_NIR_transmission_coefficient(setpoints: Setpoints):
     # Equation 8.16
-    U_Roof = setpoints.U_Roof
-    U_ThScr = setpoints.U_ThScr
-    roof_NIR_transmission_coef = Coefficients.Roof.roof_NIR_transmission_coefficient
-    roof_NIR_reflection_coef = Coefficients.Roof.roof_NIR_reflection_coefficient
-    thScr_NIR_transmission_coef = Coefficients.Thermalscreen.thScr_NIR_transmission_coefficient
-    thScr_NIR_reflection_coef = Coefficients.Thermalscreen.thScr_NIR_reflection_coefficient
-    return (1 - U_Roof * (1 - roof_NIR_transmission_coef)) *\
-           (1 - U_ThScr * (1 - thScr_NIR_transmission_coef)) / \
-           (1 - U_Roof * roof_NIR_reflection_coef * U_ThScr * thScr_NIR_reflection_coef)
+    return two_layers_transmission_coefficient(setpoints.U_Roof, setpoints.U_ThScr,
+                                               Coefficients.Roof.roof_NIR_transmission_coefficient,
+                                               Coefficients.Thermalscreen.thScr_NIR_transmission_coefficient,
+                                               Coefficients.Roof.roof_NIR_reflection_coefficient,
+                                               Coefficients.Thermalscreen.thScr_NIR_reflection_coefficient)
 
 
 def roof_thermal_screen_NIR_reflection_coefficient(setpoints: Setpoints):
     # Equation 8.17
-    U_Roof = setpoints.U_Roof
-    U_ThScr = setpoints.U_ThScr
-    roof_NIR_transmission_coef = Coefficients.Roof.roof_NIR_transmission_coefficient
-    roof_NIR_reflection_coef = Coefficients.Roof.roof_NIR_reflection_coefficient
-    thScr_NIR_reflection_coef = Coefficients.Thermalscreen.thScr_NIR_reflection_coefficient
-    return U_Roof * roof_NIR_reflection_coef + \
-           (1 - U_Roof * (1 - roof_NIR_transmission_coef)) ** 2 * U_ThScr * thScr_NIR_reflection_coef / \
-           (1 - U_Roof * roof_NIR_reflection_coef * U_ThScr * thScr_NIR_reflection_coef)
+    return two_layers_reflection_coefficient(setpoints.U_Roof, setpoints.U_ThScr,
+                                             Coefficients.Roof.roof_NIR_transmission_coefficient,
+                                             Coefficients.Roof.roof_NIR_reflection_coefficient,
+                                             Coefficients.Thermalscreen.thScr_NIR_reflection_coefficient)
 
 
-def lumped_cover_heat_capacity(setpoints: Setpoints):
+def lumped_cover_heat_capacity():
     # Equation 8.18
     mean_greenhouse_cover_slope = Coefficients.Construction.mean_greenhouse_cover_slope
     roof_thickness = Coefficients.Roof.roof_thickness
@@ -112,7 +108,7 @@ def lumped_cover_heat_capacity(setpoints: Setpoints):
     return math.cos(mean_greenhouse_cover_slope)*(roof_thickness*roof_density*c_p_Rf)
 
 
-def lumped_cover_conductive_heat_flux(setpoints: Setpoints):
+def lumped_cover_conductive_heat_flux():
     # Equation 8.19
     roof_thickness = Coefficients.Roof.roof_thickness
     roof_heat_conductivity = Coefficients.Roof.roof_heat_conductivity
