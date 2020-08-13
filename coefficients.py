@@ -1,55 +1,10 @@
-from math import inf
-
 """
-These constants and coefficients are imported from Table 8.1 in Vanthoor's thesis and from GreenLight code
+These coefficients are imported from Table 8.1 in Vanthoor's thesis and from GreenLight code
 NOTE: In the GreenLight model, there are no whitewash and shadow screen
 """
 
 
-class Constants:
-    canopy_air_convective_heat_exchange_coef = 5  # Convective heat exchange coefficient from the canopy leaf to the greenhouse air
-    evaporation_latent_heat = 2.45E6  # Latent heat of evaporation
-    sigma = 5.670E-8  # Stefan Boltzmann constant
-    can_FIR_emission_coefficient = 1  # FIR emission coefficient of the canopy
-    sky_FIR_emission_coefficient = 1  # FIR emission coefficient of the sky
-    ratio_GlobNIR = 0.5  # Ratio between NIR and the outside global radiation
-    ratio_GlobPAR = 0.5  # Ratio between PAR and the outside global radiation
-    eta_HeatCO2 = 0.057  # Amount of CO2 which is released when 1 Joule of sensible energy is produced by the heat blower
-    eta_HeatVap = 4.43E-8  # Amount of vapor which is released when 1 Joule of sensible energy is produced by the heat blower
-    eta_mg_ppm = 0.554  # CO2 conversion factor from mg m -3 to ppm.
-    eta_Roof_Thr = 0.9  # The ratio between the roof vent area and total ventilation area above no chimney effect was assumed
-    density_Air0 = 1.20  # Density of the air at sea level
-    canopy_PAR_reflection_coefficient = 0.07  # The PAR reflection coefficient of the top of the canopy
-    canopy_NIR_reflection_coefficient = 0.35  # The NIR reflection coefficient of the top of the canopy
-    steel_density = 7850  # Density of steel
-    water_density = 1E3  # Density of water
-    gamma = 65.8  # Psychrometric constant
-    omega = 1.99E-7  # The yearly frequency to calculate the soil temperature
-    cap_Leaf = 1.2E3  # Heat capacity of a square meter canopy leaves
-    c_evap1 = 4.30  # Coefficient of the stomatal resistance model to account for radiation effect
-    c_evap2 = 0.54  # Coefficient of the stomatal resistance model to account for radiation effect
-    c_day_evap3 = 6.1E-7  # Coefficient of the stomatal resistance model to account CO2 effect
-    c_night_evap3 = 1.1E-11  # Coefficient of the stomatal resistance model to account CO2 effect
-    c_day_evap4 = 4.3E-6  # Coefficient of the stomatal resistance model to account for vapor pressure difference
-    c_night_evap4 = 5.2E-6  # Coefficient of the stomatal resistance model to account for vapor pressure difference
-    c_pAir = 1E3  # Specific heat capacity of the air
-    c_pSteel = 0.64E3  # Specific heat capacity of steel
-    c_pWater = 4.18E3  # Specific heat capacity of water
-    gravity = 9.81  # The acceleration of gravity
-    canopy_PAR_extinction_coefficient = 0.7  # PAR extinction coefficient of the canopy
-    floor_PAR_extinction_coefficient = 0.7  # PAR extinction coefficient of the canopy when PAR is reflected from the floor
-    canopy_NIR_extinction_coefficient = 0.27  # Extinction coefficient of the canopy for NIR
-    canopy_FIR_extinction_coefficient = 0.94  # Extinction coefficient of the canopy for FIR
-    M_Air = 28.96  # Molar mass of air
-    M_Water = 18  # Molar mass of water
-    M_Gas = 8.314E3  # Molar gas constant
-    rad_canopy_setpoint = 5  # The radiation value above the canopy when the night becomes day and vice versa
-    boundary_layer_resistance = 275  # Boundary layer resistance of the canopy for vapor transport
-    min_canopy_transpiration_resistance = 82.0  # The minimum canopy resistance for transpiration
-    s_r_s = -1  # The slope of the differentiable switch for the stomatical resistance model
-    s_MV12 = -0.1  # The slope of the differentiable switch function for vapor pressure differences
-
-
+# TODO: import coefficients through a configuration file
 class Coefficients(object):
     class Construction:
         ratio_GlobAir = 0.1  # The ratio of the global radiation which is absorbed by the greenhouse construction elements
@@ -136,7 +91,7 @@ class Coefficients(object):
     class ActiveClimateControl:
         # cap_Fog Capacity of the fogging system
         # ventForced_air_flow Air flow capacity of the forced ventilation system
-        cap_extCO2 = 4.3E5  # Capacity of the external CO2 source
+        cap_extco2 = 4.3E5  # Capacity of the external CO2 source
         # perf_MechCool_coef Coefficient of performance of the mechanical cooling system
         # HEC_PasAir The convective heat exchange coefficient between the passive heat storage facility and the greenhouse air temperature
         # heat_cap_Blow Heat capacity of the heat blowers
@@ -147,12 +102,46 @@ class Coefficients(object):
 
     class Lamp:
         # No lamps
-        thetaLampMax = 0  # Maximum intensity of lamps
-        eta_LampPAR = 0  # fraction of lamp input converted to PAR
-        eta_LampNIR = 0  # fraction of lamp input converted to NIR
+        heat_capacity_lamp = 100  # Maximum heat capacity of lamps  [J K^-1 m^-2]
+        electrical_capacity_lamp = 110  # electrical capacity of the lamps [W m-2]
+        A_Lamp = 0.03  # surface area of the lamps per area of greenhouse floor [m m-2]
+        lamp_NIR_reflection_coef = 0  # The NIR reflection coefficient of the vertical layer of the lamps
+        lamp_PAR_reflection_coef = 0  # The PAR reflection coefficient of the vertical layer of the lamps
+        lamp_FIR_reflection_coef = 0  # The FIR reflection coefficient of the vertical layer of the lamps
+        lamp_NIR_transmission_coef = 0.97  # The NIR transmission coefficient of the vertical layer of the lamps
+        lamp_PAR_transmission_coef = 0.97  # The PAR transmission coefficient of the vertical layer of the lamps
+        lamp_FIR_transmission_coef = 0.97  # FIR transmission coefficient of the vertical layer of the lamps
+        lamp_electrical_input_PAR_conversion = 0.36  # the conversion rate from electrical input to PAR output of the lamp
+        lamp_electrical_input_NIR_conversion = 0.22  # the conversion rate from electrical input to NIR output of the lamp
+        lamp_photons_per_joule = 5  # the amount of photons per joule within the PAR output of the lamps, which depends on the lamps' spectral output
+        top_lamp_emission = 0.1  # the emissivity of the lamps towards the top
+        bottom_lamp_emission = 0.9  # the emissivity of the lamps towards the bottom
+        lamp_cool_energy = 0  # the amount of energy exported from the lamps by active cooling and removed from the greenhouse, expressed as a fraction of the electrical input [-]
+        c_HEC_LampAir = 0.09  # the heat exchange coefficient between the lamps and the surrounding air [W K-1 m-2]
 
     class Interlight:
         # No lamps
-        thetaIntLampMax = 0  # Maximum intensity of lamps
-        eta_IntLampPAR = 0  # fraction of lamp input converted to PAR
-        eta_IntLampNIR = 0  # fraction of lamp input converted to NIR
+        electrical_capacity_inter_lamp = 0  # electrical capacity of the lamps [W m-2]
+        A_Inter_lamp = 0  # surface area of the lamps per area of greenhouse floor [m2 m-2]
+        inter_lamp_electrical_input_PAR_conversion = 0  # fraction of lamp input converted to PAR [J(PAR) J-1 {electricity}]
+        inter_lamp_electrical_input_NIR_conversion = 0  # fraction of lamp input converted to NIR [J(NIR) J-1 {electricity}]
+        inter_lamp_photons_per_joule = 0  # the amount of photons per joule within the PAR output of the lamps, which depends on the lamps' spectral output [micro-mol{PAR} J-1 {PAR}]
+        inter_lamp_emission = 0  # the emissivity of the lamps towards the top [-]
+        heat_inter_lamp_capacity = 0  # heat capacity of lamps [J K^-1 m^-2]
+        c_HEC_InterLampAir = 0  # the heat exchange coefficient between the lamps and the surrounding air [W K-1 m-2]
+
+    class Blackoutscreen:
+        blScr_FIR_emission_coef = 0.67  # FIR emissions coefficient of the blackout screen [-]
+        blScr_PAR_transmission_coef = 0.01
+        blScr_PAR_reflection_coef = 0.35
+        blScr_FIR_transmission_coef = 0.7  # FIR transmission coefficient of the blackout screen [-]
+        blScr_thickness = 0.35e-3
+        blScr_density = 0.2e3  # Density of blackout screen [kg m^{-3}]
+        c_pBlScr = 1.8E3  # Specific heat capacity of the blackout screen [J kg^{-1} K^{-1}]
+
+    class GrowPipe:
+        phi_external_pipe = 0.035  # External diameter of the grow pipes [m]
+        phi_internal_pipe = 0.0338  # Internal diameter of the grow pipes [m]
+        pipe_length = 1.655  # Length of the grow pipes per square meter greenhouse floor [m m-2]
+        groPipe_FIR_emission_coef = 0  # FIR emissions coefficient of the blackout screen
+        cap_BoilGro = 0
