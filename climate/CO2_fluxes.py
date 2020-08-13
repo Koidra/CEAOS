@@ -1,26 +1,26 @@
 from ..constants import *
 from ..coefficients import Coefficients as coefs
-from ..data_models import States, Setpoints, Weather
+from ..data_models import ClimateStates, Setpoints, Weather
 from .heat_fluxes import sensible_heat_flux_between_direct_air_heater_and_greenhouse_air
 from .utils import total_side_vents_ventilation_rates, total_roof_ventilation_rates, \
     thermal_screen_air_flux_rate, air_flux
 
 
-def greenhouse_air_and_above_thermal_screen_co2_flux(states: States, setpoints: Setpoints, weather: Weather):
+def greenhouse_air_and_above_thermal_screen_co2_flux(states: ClimateStates, setpoints: Setpoints, weather: Weather):
     f_AirTop = thermal_screen_air_flux_rate(setpoints, states, weather)
-    return air_flux(f_AirTop, states.air_co2, states.above_thermal_screen_co2)
+    return air_flux(f_AirTop, states.co2_Air, states.co2_AboveThScr)
 
 
-def greenhouse_air_and_outdoor_co2_flux(states: States, setpoints: Setpoints, weather: Weather):
+def greenhouse_air_and_outdoor_co2_flux(states: ClimateStates, setpoints: Setpoints, weather: Weather):
     total_side_vent_rate = total_side_vents_ventilation_rates(setpoints, states, weather)
     f_VentForced = 0  # According to GreenLight, forced ventilation doesn't exist in this greenhouse
     f_AirOut = total_side_vent_rate + f_VentForced
-    return air_flux(f_AirOut, states.air_co2, weather.outdoor_co2)
+    return air_flux(f_AirOut, states.co2_Air, weather.co2_outdoor)
 
 
-def above_thermal_screen_and_outdoor_co2_flux(states: States, setpoints: Setpoints, weather: Weather):
+def above_thermal_screen_and_outdoor_co2_flux(states: ClimateStates, setpoints: Setpoints, weather: Weather):
     f_TopOut = total_roof_ventilation_rates(setpoints, states, weather)
-    return air_flux(f_TopOut, states.above_thermal_screen_co2, weather.outdoor_co2)
+    return air_flux(f_TopOut, states.co2_AboveThScr, weather.co2_outdoor)
 
 
 def heat_blower_to_greenhouse_air_co2_flux(setpoints: Setpoints):

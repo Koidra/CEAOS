@@ -1,7 +1,7 @@
 import math
 
-from constants import *
-from crop.tomato.equations.utils import smoothed_conditional_function
+from crop.tomato.utils import smoothed_conditional_function
+from .tomato_constants import *
 
 
 def carbohydrates_saturation_photosynthesis_rate_inhibition(carbohydrate_amount_Buf):

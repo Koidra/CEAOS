@@ -1,21 +1,20 @@
-from .. import coefficients as coefs
 from ..constants import *
-from ..data_models import States, Weather, Setpoints
+from ..data_models import ClimateStates, Weather
 from .lumped_cover_layers import *
 from .utils import air_density, saturation_vapor_pressure
 
 
-def canopy_transpiration(states: States, setpoints: Setpoints, weather: Weather) -> float:
+def canopy_transpiration(states: ClimateStates, setpoints: Setpoints, weather: Weather) -> float:
     """The canopy transpiration
     Equation 8.47
     :return: The canopy transpiration [kg m^-2 s^-1]
     """
     VEC_CanopyAir = canopy_transpiration_vapor_transfer_coefficient(states, setpoints, weather)
-    canopy_vp = saturation_vapor_pressure(states.canopy_t)
-    return VEC_CanopyAir * (canopy_vp - states.air_vapor_pressure)
+    canopy_vp = saturation_vapor_pressure(states.t_Canopy)
+    return VEC_CanopyAir * (canopy_vp - states.vapor_pressure_Air)
 
 
-def canopy_transpiration_vapor_transfer_coefficient(states: States, setpoints: Setpoints, weather: Weather) -> float:
+def canopy_transpiration_vapor_transfer_coefficient(states: ClimateStates, setpoints: Setpoints, weather: Weather) -> float:
     """The vapor transfer coefficient of the canopy transpiration
     Equation 8.48
     :return: The vapor transfer coefficient of the canopy transpiration [kg m^-2  Pa^-1 s^-1]
@@ -26,7 +25,7 @@ def canopy_transpiration_vapor_transfer_coefficient(states: States, setpoints: S
            (EVAPORATION_LATENT_HEAT * GAMMA * (BOUNDARY_LAYER_RESISTANCE + stomatal_resistance))
 
 
-def canopy_stomatal_resistance(states: States, setpoints: Setpoints, weather: Weather) -> float:
+def canopy_stomatal_resistance(states: ClimateStates, setpoints: Setpoints, weather: Weather) -> float:
     """
     The stomatal resistance of the canopy for vapor transport
     Equation 8.49
@@ -83,28 +82,28 @@ def global_radiation_resistance_factor(setpoints: Setpoints, weather: Weather) -
     return (above_canopy_global_radiation + C_EVAP1) / (above_canopy_global_radiation + C_EVAP2)
 
 
-def greenhouse_co2_resistance_factor(states: States, setpoints: Setpoints, weather: Weather) -> float:
+def greenhouse_co2_resistance_factor(states: ClimateStates, setpoints: Setpoints, weather: Weather) -> float:
     """
     The resistance factors for high CO2 levels
     Equation 8.50
     :return: The resistance factors [W m^-2]
     """
-    c_evap3 = smoothed_transpiration_parameters(nth=3, setpoints=setpoints, states=states, weather=weather)
-    return 1 + c_evap3(ETA_MG_PPM * states.air_co2 - 200) ** 2
+    c_evap3 = smoothed_transpiration_parameters(nth=3, setpoints=setpoints, weather=weather)
+    return 1 + c_evap3(ETA_MG_PPM * states.co2_Air - 200) ** 2
 
 
-def vapor_pressure_resistance_factor(states: States, setpoints: Setpoints, weather: Weather) -> float:
+def vapor_pressure_resistance_factor(states: ClimateStates, setpoints: Setpoints, weather: Weather) -> float:
     """
     The resistance factors for large vapor pressure differences
     Equation 8.50
     :return: The resistance factors [W m^-2]
     """
-    c_evap4 = smoothed_transpiration_parameters(nth=4, setpoints=setpoints, states=states, weather=weather)
-    canopy_vp = saturation_vapor_pressure(states.canopy_t)
-    return 1 + c_evap4(canopy_vp - states.air_vapor_pressure) ** 2
+    c_evap4 = smoothed_transpiration_parameters(nth=4, setpoints=setpoints, weather=weather)
+    canopy_vp = saturation_vapor_pressure(states.t_Canopy)
+    return 1 + c_evap4(canopy_vp - states.vapor_pressure_Air) ** 2
 
 
-def differentiable_switch(states: States, setpoints: Setpoints, weather: Weather):
+def differentiable_switch(setpoints: Setpoints, weather: Weather):
     # Equation 8.51
     outdoor_global_rad = weather.outdoor_global_rad
     ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
@@ -145,9 +144,9 @@ def differentiable_switch(states: States, setpoints: Setpoints, weather: Weather
     return 1 / (1 + math.exp(S_R_S * (above_canopy_global_radiation - RAD_CANOPY_SETPOINT)))
 
 
-def smoothed_transpiration_parameters(nth: int, states: States, setpoints: Setpoints, weather: Weather):
+def smoothed_transpiration_parameters(nth: int, setpoints: Setpoints, weather: Weather):
     # Equation 8.52
-    S_r_s = differentiable_switch(states, setpoints, weather)
+    S_r_s = differentiable_switch(setpoints, weather)
     if nth == 3:
         return C_NIGHT_EVAP3 * (1 - S_r_s) + C_NIGHT_EVAP3 * S_r_s
     else:

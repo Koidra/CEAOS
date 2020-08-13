@@ -1,6 +1,6 @@
-from constants import *
-from crop.tomato.equations.inhibitions import fruit_flow_inhibition
-from crop.tomato.equations.utils import fruit_development, smoothed_conditional_function
+from crop.tomato.inhibitions import fruit_flow_inhibition
+from crop.tomato.utils import fruit_development, smoothed_conditional_function
+from .tomato_constants import *
 
 
 def fruit_set_of_first_development_stage(last_24_canopy_t, carbohydrate_flow_BufFruits):

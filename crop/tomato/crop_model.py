@@ -1,9 +1,9 @@
 from typing import NamedTuple
 
-from constants import FRUIT_DEVELOPMENT_STAGES_NUM
+from .tomato_constants import *
 
 
-class TomatoModel(NamedTuple):
+class CropStates(NamedTuple):
     carbohydrate_amount_Buf: float
     carbohydrate_amount_Fruits: [float]*FRUIT_DEVELOPMENT_STAGES_NUM
     number_Fruits: [float]*FRUIT_DEVELOPMENT_STAGES_NUM
