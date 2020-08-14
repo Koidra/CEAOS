@@ -133,7 +133,9 @@ class Coefficients(object):
     class Blackoutscreen:
         blScr_FIR_emission_coef = 0.67  # FIR emissions coefficient of the blackout screen [-]
         blScr_PAR_transmission_coef = 0.01
+        blScr_NIR_transmission_coef = 0.01
         blScr_PAR_reflection_coef = 0.35
+        blScr_NIR_reflection_coef = 0.35
         blScr_FIR_transmission_coef = 0.7  # FIR transmission coefficient of the blackout screen [-]
         blScr_thickness = 0.35e-3
         blScr_density = 0.2e3  # Density of blackout screen [kg m^{-3}]

@@ -4,11 +4,11 @@ Based on section 8.6
 """
 
 # 8.6.1 Global, PAR and NIR heat fluxes
-from climate.canopy_transpiration import *
-from climate.radiation_fluxes import *
-from climate.utils import *
-from climate.vapor_fluxes import fogging_system_to_greenhouse_air_latent_vapor_flux, differentiable_air_to_obj_vapor_flux
-from constants import *
+from .canopy_transpiration import *
+from .radiation_fluxes import *
+from .utils import *
+from .vapor_fluxes import fogging_system_to_greenhouse_air_latent_vapor_flux, differentiable_air_to_obj_vapor_flux
+from ..constants import *
 
 
 # TODO: inline these
@@ -34,7 +34,7 @@ def canopy_virtual_NIR_reflection_coefficient(states: ClimateStates):
     return CANOPY_NIR_REFLECTION_COEF * (1 - virtual_NIR_transmission_canopy_coef)
 
 
-def construction_elements_global_radiation(states: ClimateStates, setpoints: Setpoints, weather: Weather):
+def greenhouse_air_absorbed_global_radiation(states: ClimateStates, setpoints: Setpoints, weather: Weather):
     """
     Equation 8.36
     Args:
@@ -42,69 +42,21 @@ def construction_elements_global_radiation(states: ClimateStates, setpoints: Set
         setpoints:
         weather:
 
-    Returns:[W m^-2]
+    Returns: Global radiation from the sun absorbed by the greenhouse air [W m^-2]
 
     """
-    outdoor_global_rad = weather.outdoor_global_rad
-    # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-    shScr_NIR_transmission_coef = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
-    shScr_NIR_reflection_coef = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
-
-    # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_NIR_reflection_coef = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
-
-    # Vanthoor NIR reflection coefficient of the lumped cover
-    cover_NIR_reflection_coef = double_layer_cover_reflection_coefficient(shScr_NIR_transmission_coef,
-                                                                          shScr_NIR_reflection_coef,
-                                                                          roof_thScr_NIR_reflection_coef)
-    virtual_NIR_reflection_canopy_coef = canopy_virtual_NIR_reflection_coefficient(states)
-    floor_NIR_reflection_coef = Coefficients.Floor.floor_NIR_reflection_coefficient
-
-    virtual_NIR_transmission_cover_coef = lumped_cover_virtual_NIR_transmission_coefficients(cover_NIR_reflection_coef)
-    virtual_NIR_transmission_canopy_coef = canopy_virtual_NIR_transmission_coefficient(states)
-    virtual_NIR_transmission_floor_coef = floor_virtual_NIR_transmission_coefficients()
-
-    # NIR transmission coefficient of the cover and canopy
-    cover_canopy_NIR_transmission_coef = double_layer_cover_transmission_coefficient(
-        virtual_NIR_transmission_cover_coef, virtual_NIR_transmission_canopy_coef, cover_NIR_reflection_coef,
-        virtual_NIR_reflection_canopy_coef)  # line 380 / setGlAux / GreenLight
-    # NIR reflection coefficient of the cover and canopy
-    cover_canopy_NIR_reflection_coef = double_layer_cover_reflection_coefficient(virtual_NIR_transmission_cover_coef,
-                                                                                 cover_NIR_reflection_coef,
-                                                                                 virtual_NIR_reflection_canopy_coef)  # line 383, 386 / setGlAux / GreenLight
-
-    # NIR transmission coefficient of the cover, canopy and floor
-    cover_canopy_floor_NIR_transmission_coef = double_layer_cover_transmission_coefficient(cover_canopy_NIR_transmission_coef,
-                                                                                           virtual_NIR_transmission_floor_coef,
-                                                                                           cover_canopy_NIR_reflection_coef,
-                                                                                           floor_NIR_reflection_coef)  # line 389 / setGlAux / GreenLight
-    # NIR reflection coefficient of the cover, canopy and floor
-    cover_canopy_floor_NIR_reflection_coef = double_layer_cover_reflection_coefficient(cover_canopy_NIR_transmission_coef,
-                                                                                       cover_canopy_NIR_reflection_coef,
-                                                                                       floor_NIR_reflection_coef)  # line 392 / setGlAux / GreenLight
-
-    shScr_PAR_transmission_coef = Coefficients.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
-    shScr_PAR_reflection_coef = Coefficients.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
-
-    # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_PAR_transmission_coef = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
-    # PAR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_PAR_reflection_coef = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
+    cover_canopy_floor_NIR_transmission_coef, cover_canopy_floor_NIR_reflection_coef = cover_canopy_floor_NIR_coefficients(states, setpoints)
 
     # NIR absorption coefficient of the canopy
-    NIR_absorption_canopy_coef = 1 - cover_canopy_floor_NIR_transmission_coef - cover_canopy_floor_NIR_reflection_coef  # page 213
+    NIR_absorption_canopy_coef = absorption_coefficient(cover_canopy_floor_NIR_transmission_coef, cover_canopy_floor_NIR_reflection_coef)  # page 213
     # NIR absorption coefficient of the floor
     NIR_absorption_floor_coef = cover_canopy_floor_NIR_transmission_coef  # page 213
 
-    cover_PAR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_PAR_transmission_coef,
-                                                                              roof_thScr_PAR_transmission_coef,
-                                                                              shScr_PAR_reflection_coef,
-                                                                              roof_thScr_PAR_reflection_coef)
+    cover_PAR_transmission_coef, cover_PAR_reflection_coef = lumped_cover_PAR_coefficients(setpoints)
 
-    ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
-    return ratio_GlobAir * outdoor_global_rad * \
-           (cover_PAR_transmission_coef * RATIO_GLOBALPAR
-            + (NIR_absorption_canopy_coef + NIR_absorption_floor_coef) * RATIO_GLOBALNIR)
+    return Coefficients.Construction.ratio_GlobAir * weather.outdoor_global_rad \
+           * (cover_PAR_transmission_coef * RATIO_GLOBALPAR
+             + (NIR_absorption_canopy_coef + NIR_absorption_floor_coef) * RATIO_GLOBALNIR)
 
 
 def lamp_radiation(states, setpoints):
@@ -126,15 +78,6 @@ def lamp_radiation(states, setpoints):
     return (Coefficients.Lamp.lamp_electrical_input_PAR_conversion + Coefficients.Lamp.lamp_electrical_input_NIR_conversion) \
            * electrical_input_lamp \
            - radiation_flux_PAR_LampCanopy - radiation_flux_NIR_LampCanopy - radiation_flux_PAR_LampFlr - radiation_flux_NIR_LampFlr
-
-
-def thermal_screen_FIR_transmission_coefficient(setpoints: Setpoints):
-    # Equation 8.39
-    return 1 - setpoints.U_ThScr * (1 - Coefficients.Thermalscreen.thScr_FIR_transmission_coefficient)
-
-
-def blackout_screen_FIR_transmission_coefficient(setpoints: Setpoints):
-    return 1 - setpoints.U_BlScr * (1 - Coefficients.Blackoutscreen.blScr_FIR_transmission_coef)
 
 
 # 8.6.3 Convection and conduction

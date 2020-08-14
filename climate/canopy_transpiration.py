@@ -1,7 +1,8 @@
-from ..constants import *
-from ..data_models import ClimateStates, Weather
 from .lumped_cover_layers import *
+from .radiation_fluxes import global_radiation_above_canopy
 from .utils import air_density, saturation_vapor_pressure
+from ..constants import *
+from ..data_models import Weather
 
 
 def canopy_transpiration(states: ClimateStates, setpoints: Setpoints, weather: Weather) -> float:
@@ -14,15 +15,16 @@ def canopy_transpiration(states: ClimateStates, setpoints: Setpoints, weather: W
     return VEC_CanopyAir * (canopy_vp - states.vapor_pressure_Air)
 
 
-def canopy_transpiration_vapor_transfer_coefficient(states: ClimateStates, setpoints: Setpoints, weather: Weather) -> float:
+def canopy_transpiration_vapor_transfer_coefficient(states: ClimateStates, setpoints: Setpoints,
+                                                    weather: Weather) -> float:
     """The vapor transfer coefficient of the canopy transpiration
     Equation 8.48
     :return: The vapor transfer coefficient of the canopy transpiration [kg m^-2  Pa^-1 s^-1]
     """
     density_air = air_density()
     stomatal_resistance = canopy_stomatal_resistance(states, setpoints, weather)
-    return 2 * density_air * C_PAIR * states.leaf_area_index / \
-           (EVAPORATION_LATENT_HEAT * GAMMA * (BOUNDARY_LAYER_RESISTANCE + stomatal_resistance))
+    return 2 * density_air * C_PAIR * states.leaf_area_index \
+           / (EVAPORATION_LATENT_HEAT * GAMMA * (BOUNDARY_LAYER_RESISTANCE + stomatal_resistance))
 
 
 def canopy_stomatal_resistance(states: ClimateStates, setpoints: Setpoints, weather: Weather) -> float:
@@ -43,42 +45,7 @@ def global_radiation_resistance_factor(setpoints: Setpoints, weather: Weather) -
     Equation 8.50
     :return: The resistance factors [W m^-2]
     """
-    outdoor_global_rad = weather.outdoor_global_rad
-    ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
-    # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-    shScr_PAR_transmission_coef = Coefficients.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
-    shScr_PAR_reflection_coef = Coefficients.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
-
-    # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_PAR_transmission_coef = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
-    # PAR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_PAR_reflection_coef = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
-
-    # Vanthoor PAR transmission coefficient of the lumped cover
-    cover_PAR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_PAR_transmission_coef,
-                                                                              roof_thScr_PAR_transmission_coef,
-                                                                              shScr_PAR_reflection_coef,
-                                                                              roof_thScr_PAR_reflection_coef)
-
-    shScr_NIR_transmission_coef = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
-    shScr_NIR_reflection_coef = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
-
-    # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_NIR_transmission_coef = roof_thermal_screen_NIR_transmission_coefficient(setpoints)
-    # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_NIR_reflection_coef = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
-
-    # Vanthoor NIR transmission coefficient of the lumped cover
-    cover_NIR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_NIR_transmission_coef,
-                                                                              roof_thScr_NIR_transmission_coef,
-                                                                              shScr_NIR_reflection_coef,
-                                                                              roof_thScr_NIR_reflection_coef)
-
-    # Global radiation above the canopy from the sun
-    rCanopySun = (1 - ratio_GlobAir) * outdoor_global_rad * \
-              (RATIO_GLOBALPAR * cover_PAR_transmission_coef + RATIO_GLOBALNIR * cover_NIR_transmission_coef)
-    # Global radiation above the canopy
-    above_canopy_global_radiation = rCanopySun  # Note: line 338 / setGlAux / GreenLight
+    above_canopy_global_radiation = global_radiation_above_canopy(setpoints, weather)
     return (above_canopy_global_radiation + C_EVAP1) / (above_canopy_global_radiation + C_EVAP2)
 
 
@@ -105,42 +72,7 @@ def vapor_pressure_resistance_factor(states: ClimateStates, setpoints: Setpoints
 
 def differentiable_switch(setpoints: Setpoints, weather: Weather):
     # Equation 8.51
-    outdoor_global_rad = weather.outdoor_global_rad
-    ratio_GlobAir = Coefficients.Construction.ratio_GlobAir
-    # TODO: need to re-verify the order of four cover layers and cover-canopy-floor
-    shScr_PAR_transmission_coef = Coefficients.Shadowscreen.shScr_PAR_transmission_coefficient  # line 156 / setGlParams / GreenLight
-    shScr_PAR_reflection_coef = Coefficients.Shadowscreen.shScr_PAR_reflection_coefficient  # line 153 / setGlParams / GreenLight
-
-    # PAR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_PAR_transmission_coef = roof_thermal_screen_PAR_transmission_coefficient(setpoints)
-    # PAR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_PAR_reflection_coef = roof_thermal_screen_PAR_reflection_coefficient(setpoints)
-
-    # Vanthoor PAR transmission coefficient of the lumped cover
-    cover_PAR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_PAR_transmission_coef,
-                                                                              roof_thScr_PAR_transmission_coef,
-                                                                              shScr_PAR_reflection_coef,
-                                                                              roof_thScr_PAR_reflection_coef)
-
-    shScr_NIR_transmission_coef = Coefficients.Shadowscreen.shScr_NIR_transmission_coefficient  # line 155 / setGlParams / GreenLight
-    shScr_NIR_reflection_coef = Coefficients.Shadowscreen.shScr_NIR_reflection_coefficient  # line 152 / setGlParams / GreenLight
-
-    # NIR transmission coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_NIR_transmission_coef = roof_thermal_screen_NIR_transmission_coefficient(setpoints)
-    # NIR reflection coefficient of the movable shading screen and the semi-permanent shading screen
-    roof_thScr_NIR_reflection_coef = roof_thermal_screen_NIR_reflection_coefficient(setpoints)
-
-    # Vanthoor NIR transmission coefficient of the lumped cover
-    cover_NIR_transmission_coef = double_layer_cover_transmission_coefficient(shScr_NIR_transmission_coef,
-                                                                              roof_thScr_NIR_transmission_coef,
-                                                                              shScr_NIR_reflection_coef,
-                                                                              roof_thScr_NIR_reflection_coef)
-
-    # Global radiation above the canopy from the sun
-    rCanopySun = (1 - ratio_GlobAir) * outdoor_global_rad * \
-                 (RATIO_GLOBALPAR * cover_PAR_transmission_coef + RATIO_GLOBALNIR * cover_NIR_transmission_coef)
-    # Global radiation above the canopy
-    above_canopy_global_radiation = rCanopySun  # Note: line 338 / setGlAux / GreenLight
+    above_canopy_global_radiation = global_radiation_above_canopy(setpoints, weather)
     return 1 / (1 + math.exp(S_R_S * (above_canopy_global_radiation - RAD_CANOPY_SETPOINT)))
 
 

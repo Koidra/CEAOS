@@ -15,12 +15,10 @@ The state variables of the model are all described by differential equations.
 - top_CO2: The CO2 of the compartment above the thermal screen
 """
 from .CO2_fluxes import *
-from .electrical_input import inter_lamp_electrical_input
-from .heat_fluxes import *
 from .capacities import *
+from .heat_fluxes import *
 from .radiation_fluxes import *
 from .vapor_fluxes import *
-from .utils import air_density
 
 
 def canopy_temperature(setpoints: Setpoints, states: ClimateStates, weather: Weather):
@@ -76,7 +74,7 @@ def greenhouse_air_temperature(setpoints: Setpoints, states: ClimateStates, weat
     density_air = air_density()
     cap_Air = remaining_object_heat_capacity(air_height, density_air, C_PAIR)
 
-    radiation_flux_Glob_SunAir = construction_elements_global_radiation(states, setpoints, weather)
+    radiation_flux_Glob_SunAir = greenhouse_air_absorbed_global_radiation(states, setpoints, weather)
     sensible_heat_flux_CanopyAir = sensible_heat_flux_between_canopy_and_air(states)
     sensible_heat_flux_MechAir = sensible_heat_flux_between_mechanical_cooling_and_greenhouse_air(setpoints, states)
     sensible_heat_flux_PipeAir = sensible_heat_flux_between_heating_pipe_and_greenhouse_air(states)
@@ -255,7 +253,7 @@ def external_cover_temperature(setpoints: Setpoints, states: ClimateStates, weat
     radiation_flux_Glob_SunCov_e = cover_global_radiation(setpoints, weather)
     sensible_heat_flux_Cov_in_Cov_e = sensible_heat_flux_between_internal_cover_and_external_cover(states)
     sensible_heat_flux_Cov_e_Out = sensible_heat_flux_between_external_cover_and_outdoor(states, weather)
-    radiation_flux_Cov_e_Sky = FIR_from_external_cover_to_sky(states, weather)
+    radiation_flux_Cov_e_Sky = FIR_from_external_cover_to_sky(states, setpoints, weather)
 
     return (radiation_flux_Glob_SunCov_e + sensible_heat_flux_Cov_in_Cov_e
             - sensible_heat_flux_Cov_e_Out - radiation_flux_Cov_e_Sky) / cap_Cov_e
